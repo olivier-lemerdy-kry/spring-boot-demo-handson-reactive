@@ -4,6 +4,7 @@ import java.util.UUID;
 import javax.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -42,8 +43,10 @@ public class EventsController {
   }
 
   @GetMapping("{id}")
-  Mono<Event> readEvent(@PathVariable UUID id) {
-    return service.getEvent(id);
+  Mono<ResponseEntity<Event>> readEvent(@PathVariable UUID id) {
+    return service.getEvent(id)
+        .map(ResponseEntity::ok)
+        .defaultIfEmpty(ResponseEntity.notFound().build());
   }
 
   @PatchMapping("{id}")

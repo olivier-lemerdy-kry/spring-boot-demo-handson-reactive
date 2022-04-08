@@ -45,10 +45,17 @@ public class EventService {
   }
 
   private Event newEventFromCreationRequest(@NotNull EventCreationRequest eventCreationRequest) {
-    return new Event();
+    return Event.from(
+        eventCreationRequest.title(),
+        eventCreationRequest.start(),
+        eventCreationRequest.end());
   }
 
   private Event updateEventFromUpdateRequest(@NotNull Event event, @NotNull EventUpdateRequest eventUpdateRequest) {
-    return event;
+    return event.copy(
+        title -> eventUpdateRequest.title().orElse(title),
+        start -> eventUpdateRequest.start().orElse(start),
+        end -> eventUpdateRequest.end().orElse(end)
+    );
   }
 }

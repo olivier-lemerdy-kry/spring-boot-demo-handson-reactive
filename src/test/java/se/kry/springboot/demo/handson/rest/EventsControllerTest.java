@@ -32,14 +32,15 @@ class EventsControllerTest {
 
   @Test
   void create_event() {
+    var id = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
     var start = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
     var end = start.plusHours(12);
 
     when(service.createEvent(any())).thenReturn(
-        Mono.just(new Event()));
+        Mono.just(new Event(id, "Some event", start, end)));
 
     var payload = objectMapper.createObjectNode()
-        .put("title", "someEvent")
+        .put("title", "Some Event")
         .put("start", "2001-01-01T00:00:00")
         .put("end", "2001-01-01T00:00:00")
         .toString();
@@ -137,20 +138,19 @@ class EventsControllerTest {
 
   @Test
   void read_event() {
-    var uuid = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
-
+    var id = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
     var start = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
     var end = start.plusHours(12);
 
-    when(service.getEvent(uuid)).thenReturn(Mono.just(new Event()));
+    when(service.getEvent(id)).thenReturn(Mono.just(new Event(id, "Some event", start, end)));
 
-    webTestClient.get().uri("/api/v1/events/{id}", uuid)
+    webTestClient.get().uri("/api/v1/events/{id}", id)
         .exchange()
         .expectStatus().isOk()
         .expectBody()
         .jsonPath("$.title").isEqualTo("Some event")
         .jsonPath("$.start").isEqualTo("2001-01-01T00:00:00")
-        .jsonPath("$.end").isEqualTo("2001-01-01T00:00:00");
+        .jsonPath("$.end").isEqualTo("2001-01-01T12:00:00");
   }
 
   @Test
@@ -188,6 +188,9 @@ class EventsControllerTest {
     var payload = objectMapper.createObjectNode()
         .put("title", "Some other event")
         .toString();
+
+    when(service.getEvent(uuid))
+        .thenReturn(Mono.empty());
 
     webTestClient.patch().uri("/api/v1/events/{id}", uuid)
         .contentType(MediaType.APPLICATION_JSON)
@@ -228,7 +231,7 @@ class EventsControllerTest {
   }
 
   @Test
-  void delete_event() throws Exception {
+  void delete_event() {
     var uuid = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
 
     webTestClient.delete().uri("/api/v1/events/{id}", uuid)
@@ -237,7 +240,7 @@ class EventsControllerTest {
   }
 
   @Test
-  void delete_event_with_incorrect_id() throws Exception {
+  void delete_event_with_incorrect_id() {
     webTestClient.delete().uri("/api/v1/events/{id}", "foobar")
         .exchange()
         .expectStatus().isBadRequest();

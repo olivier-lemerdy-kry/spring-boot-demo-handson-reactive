@@ -1,13 +1,28 @@
 package se.kry.springboot.demo.handson.data;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.function.UnaryOperator;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Persistable;
+import org.springframework.data.relational.core.mapping.Table;
+import se.kry.springboot.demo.handson.domain.EventConstants;
 
-public class Event implements Persistable<UUID> {
+@Table
+public record Event(
+    @Id UUID id,
+    @NotBlank @Size(max = EventConstants.SIZE_TITLE) String title,
+    @NotNull LocalDateTime start,
+    @NotNull LocalDateTime end) implements Persistable<UUID> {
 
-  @Id
-  private UUID id;
+  public static Event from(@NotBlank @Size(max = EventConstants.SIZE_TITLE) String title,
+                           @NotNull LocalDateTime start,
+                           @NotNull LocalDateTime end) {
+    return new Event(UUID.randomUUID(), title, start, end);
+  }
 
   @Override
   public UUID getId() {
@@ -17,5 +32,11 @@ public class Event implements Persistable<UUID> {
   @Override
   public boolean isNew() {
     return id == null;
+  }
+
+  public Event copy(UnaryOperator<String> titleFunction,
+                    UnaryOperator<LocalDateTime> startFunction,
+                    UnaryOperator<LocalDateTime> endFunction) {
+    return new Event(id, titleFunction.apply(title), startFunction.apply(start), endFunction.apply(end));
   }
 }
