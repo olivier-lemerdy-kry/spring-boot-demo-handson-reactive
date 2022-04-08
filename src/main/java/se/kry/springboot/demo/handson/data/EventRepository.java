@@ -8,5 +8,5 @@ import reactor.core.publisher.Flux;
 
 public interface EventRepository extends R2dbcRepository<Event, UUID> {
 
-  Flux<Event> findAll(Pageable pageable);
+  Flux<Event> findBy(Pageable pageable);
 }

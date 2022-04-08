@@ -54,7 +54,7 @@ class EventRepositoryTest {
         .collect(Collectors.toList());
     Mono.when(inserts).block();
 
-    repository.findAll(Pageable.ofSize(20))
+    repository.findBy(Pageable.ofSize(20))
         .collectList()
         .as(StepVerifier::create)
         .assertNext(events ->

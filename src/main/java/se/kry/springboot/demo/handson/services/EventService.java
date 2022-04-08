@@ -27,7 +27,7 @@ public class EventService {
   }
 
   public Flux<Event> getEvents(@NotNull Pageable pageable) {
-    return repository.findAll(pageable);
+    return repository.findBy(pageable);
   }
 
   public Mono<Event> getEvent(@NotNull UUID id) {
