@@ -154,6 +154,17 @@ class EventsControllerTest {
   }
 
   @Test
+  void read_event_with_unknown_id() {
+    var id = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
+
+    when(service.getEvent(id)).thenReturn(Mono.empty());
+
+    webTestClient.get().uri("/api/v1/events/{id}", id)
+        .exchange()
+        .expectStatus().isNotFound();
+  }
+
+  @Test
   void update_event() {
     var uuid = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
 

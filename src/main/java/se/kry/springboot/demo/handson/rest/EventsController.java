@@ -50,8 +50,10 @@ public class EventsController {
   }
 
   @PatchMapping("{id}")
-  Mono<Event> updateEvent(@PathVariable UUID id, @Valid @RequestBody EventUpdateRequest eventUpdateRequest) {
-    return service.updateEvent(id, eventUpdateRequest);
+  Mono<ResponseEntity<Event>> updateEvent(@PathVariable UUID id, @Valid @RequestBody EventUpdateRequest eventUpdateRequest) {
+    return service.updateEvent(id, eventUpdateRequest)
+        .map(ResponseEntity::ok)
+        .defaultIfEmpty(ResponseEntity.notFound().build());
   }
 
   @DeleteMapping("{id}")

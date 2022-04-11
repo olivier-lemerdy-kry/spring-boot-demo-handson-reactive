@@ -34,12 +34,14 @@ public class EventService {
     return repository.findById(id);
   }
 
+  @Transactional
   public Mono<Event> updateEvent(@NotNull UUID id, @NotNull EventUpdateRequest eventUpdateRequest) {
     return getEvent(id)
         .map(event -> updateEventFromUpdateRequest(event, eventUpdateRequest))
         .flatMap(repository::save);
   }
 
+  @Transactional
   public Mono<Void> deleteEvent(@NotNull UUID id) {
     return repository.deleteById(id);
   }
