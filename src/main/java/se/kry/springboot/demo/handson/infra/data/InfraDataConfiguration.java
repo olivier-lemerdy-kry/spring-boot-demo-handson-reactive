@@ -8,10 +8,12 @@ import org.springframework.data.auditing.DateTimeProvider;
 import org.springframework.data.r2dbc.config.EnableR2dbcAuditing;
 
 @Configuration
-@EnableR2dbcAuditing
+@EnableR2dbcAuditing(dateTimeProviderRef = InfraDataConfiguration.DATE_TIME_PROVIDER_NAME)
 public class InfraDataConfiguration {
 
-  @Bean
+  static final String DATE_TIME_PROVIDER_NAME = "dateTimeProvider";
+
+  @Bean(name = DATE_TIME_PROVIDER_NAME)
   DateTimeProvider dateTimeProvider(Clock clock) {
     return () -> Optional.of(clock.instant());
   }
