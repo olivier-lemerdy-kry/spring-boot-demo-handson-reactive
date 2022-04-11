@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
 import java.util.UUID;
@@ -67,8 +66,9 @@ class EventRepositoryTest {
   @Test
   void save_event() {
     var start = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
+    var end = start.plusHours(12);
 
-    repository.save(Event.from("Some event", start, start.plusHours(12)))
+    repository.save(Event.from("Some event", start, end))
         .as(StepVerifier::create)
         .assertNext(event -> {
           assertThat(event).isNotNull();
@@ -83,8 +83,9 @@ class EventRepositoryTest {
   void save_event_with_too_long_title() {
     var title = "X".repeat(300);
     var start = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
+    var end = start.plusHours(12);
 
-    repository.save(Event.from(title, start, start.plusHours(12)))
+    repository.save(Event.from(title, start, end))
         .as(StepVerifier::create)
         .expectErrorSatisfies(exception ->
             assertThat(exception)

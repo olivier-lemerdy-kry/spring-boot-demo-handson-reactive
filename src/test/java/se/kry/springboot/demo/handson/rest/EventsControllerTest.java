@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Month;
@@ -15,10 +14,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
-import se.kry.springboot.demo.handson.data.Event;
+import se.kry.springboot.demo.handson.domain.EventResponse;
 import se.kry.springboot.demo.handson.domain.EventUpdateRequest;
 import se.kry.springboot.demo.handson.services.EventService;
 
@@ -41,7 +41,7 @@ class EventsControllerTest {
     var end = start.plusHours(12);
 
     when(service.createEvent(any())).thenReturn(
-        Mono.just(new Event(id, "Some event", start, end, Instant.EPOCH, Instant.EPOCH)));
+        Mono.just(new EventResponse(id, "Some event", start, end)));
 
     var payload = objectMapper.createObjectNode()
         .put("title", "Some Event")
@@ -135,9 +135,14 @@ class EventsControllerTest {
 
   @Test
   void read_events() {
+    when(service.getEvents(any()))
+        .thenReturn(Mono.just(Page.empty()));
+
     webTestClient.get().uri("/api/v1/events")
         .exchange()
-        .expectStatus().isOk();
+        .expectStatus().isOk()
+        .expectBody()
+        .jsonPath("$.content").isArray();
   }
 
   @Test
@@ -147,7 +152,7 @@ class EventsControllerTest {
     var end = start.plusHours(12);
 
     when(service.getEvent(id)).thenReturn(
-        Mono.just(new Event(id, "Some event", start, end, Instant.EPOCH, Instant.EPOCH)));
+        Mono.just(new EventResponse(id, "Some event", start, end)));
 
     webTestClient.get().uri("/api/v1/events/{id}", id)
         .exchange()
@@ -177,7 +182,7 @@ class EventsControllerTest {
 
     when(service.updateEvent(uuid,
         new EventUpdateRequest(Optional.of("Some other event"), Optional.empty(), Optional.empty())))
-        .thenReturn(Mono.just(new Event(uuid, "Some other event", start, end, Instant.EPOCH, Instant.EPOCH)));
+        .thenReturn(Mono.just(new EventResponse(uuid, "Some other event", start, end)));
 
     var payload = objectMapper.createObjectNode()
         .put("title", "Some other event")

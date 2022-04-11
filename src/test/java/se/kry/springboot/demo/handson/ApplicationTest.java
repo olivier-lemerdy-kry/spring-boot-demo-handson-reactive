@@ -66,10 +66,10 @@ class ApplicationTest {
         .exchange()
         .expectStatus().isOk()
         .expectBody()
-        .jsonPath("$").isArray()
-        .jsonPath("$[0].title").isEqualTo("Some event")
-        .jsonPath("$[0].start").isEqualTo("2001-01-01T00:00:00")
-        .jsonPath("$[0].end").isEqualTo("2001-01-01T12:00:00");
+        .jsonPath("$.content").isArray()
+        .jsonPath("$.content[0].title").isEqualTo("Some event")
+        .jsonPath("$.content[0].start").isEqualTo("2001-01-01T00:00:00")
+        .jsonPath("$.content[0].end").isEqualTo("2001-01-01T12:00:00");
   }
 
   @Test

@@ -2,14 +2,16 @@ package se.kry.springboot.demo.handson.services;
 
 import java.util.UUID;
 import javax.validation.constraints.NotNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import se.kry.springboot.demo.handson.data.Event;
 import se.kry.springboot.demo.handson.data.EventRepository;
 import se.kry.springboot.demo.handson.domain.EventCreationRequest;
+import se.kry.springboot.demo.handson.domain.EventResponse;
 import se.kry.springboot.demo.handson.domain.EventUpdateRequest;
 
 @Service
@@ -22,23 +24,29 @@ public class EventService {
   }
 
   @Transactional
-  public Mono<Event> createEvent(@NotNull EventCreationRequest eventCreationRequest) {
-    return repository.save(newEventFromCreationRequest(eventCreationRequest));
+  public Mono<EventResponse> createEvent(@NotNull EventCreationRequest eventCreationRequest) {
+    return repository.save(newEventFromCreationRequest(eventCreationRequest))
+        .map(this::responseFromEvent);
   }
 
-  public Flux<Event> getEvents(@NotNull Pageable pageable) {
-    return repository.findBy(pageable);
+  public Mono<Page<EventResponse>> getEvents(@NotNull Pageable pageable) {
+    return Mono.zip(
+        repository.count(),
+        repository.findBy(pageable).collectList(),
+        (count, list) -> new PageImpl<>(list, pageable, count).map(this::responseFromEvent));
   }
 
-  public Mono<Event> getEvent(@NotNull UUID id) {
-    return repository.findById(id);
+  public Mono<EventResponse> getEvent(@NotNull UUID id) {
+    return repository.findById(id)
+        .map(this::responseFromEvent);
   }
 
   @Transactional
-  public Mono<Event> updateEvent(@NotNull UUID id, @NotNull EventUpdateRequest eventUpdateRequest) {
-    return getEvent(id)
+  public Mono<EventResponse> updateEvent(@NotNull UUID id, @NotNull EventUpdateRequest eventUpdateRequest) {
+    return repository.findById(id)
         .map(event -> updateEventFromUpdateRequest(event, eventUpdateRequest))
-        .flatMap(repository::save);
+        .flatMap(repository::save)
+        .map(this::responseFromEvent);
   }
 
   @Transactional
@@ -59,5 +67,9 @@ public class EventService {
         start -> eventUpdateRequest.start().orElse(start),
         end -> eventUpdateRequest.end().orElse(end)
     );
+  }
+
+  private EventResponse responseFromEvent(Event event) {
+    return new EventResponse(event.id(), event.title(), event.start(), event.end());
   }
 }
