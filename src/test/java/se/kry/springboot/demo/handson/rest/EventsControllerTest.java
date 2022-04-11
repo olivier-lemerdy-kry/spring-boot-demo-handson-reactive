@@ -1,12 +1,15 @@
 package se.kry.springboot.demo.handson.rest;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Month;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 import se.kry.springboot.demo.handson.data.Event;
+import se.kry.springboot.demo.handson.domain.EventUpdateRequest;
 import se.kry.springboot.demo.handson.services.EventService;
 
 @WebFluxTest(EventsController.class)
@@ -37,7 +41,7 @@ class EventsControllerTest {
     var end = start.plusHours(12);
 
     when(service.createEvent(any())).thenReturn(
-        Mono.just(new Event(id, "Some event", start, end)));
+        Mono.just(new Event(id, "Some event", start, end, Instant.EPOCH, Instant.EPOCH)));
 
     var payload = objectMapper.createObjectNode()
         .put("title", "Some Event")
@@ -142,7 +146,8 @@ class EventsControllerTest {
     var start = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
     var end = start.plusHours(12);
 
-    when(service.getEvent(id)).thenReturn(Mono.just(new Event(id, "Some event", start, end)));
+    when(service.getEvent(id)).thenReturn(
+        Mono.just(new Event(id, "Some event", start, end, Instant.EPOCH, Instant.EPOCH)));
 
     webTestClient.get().uri("/api/v1/events/{id}", id)
         .exchange()
@@ -167,6 +172,12 @@ class EventsControllerTest {
   @Test
   void update_event() {
     var uuid = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
+    var start = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
+    var end = start.plusHours(12);
+
+    when(service.updateEvent(uuid,
+        new EventUpdateRequest(Optional.of("Some other event"), Optional.empty(), Optional.empty())))
+        .thenReturn(Mono.just(new Event(uuid, "Some other event", start, end, Instant.EPOCH, Instant.EPOCH)));
 
     var payload = objectMapper.createObjectNode()
         .put("title", "Some other event")
@@ -196,12 +207,12 @@ class EventsControllerTest {
   void update_event_with_unknown_id() {
     var uuid = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
 
+    when(service.updateEvent(eq(uuid), any()))
+        .thenReturn(Mono.empty());
+
     var payload = objectMapper.createObjectNode()
         .put("title", "Some other event")
         .toString();
-
-    when(service.getEvent(uuid))
-        .thenReturn(Mono.empty());
 
     webTestClient.patch().uri("/api/v1/events/{id}", uuid)
         .contentType(MediaType.APPLICATION_JSON)

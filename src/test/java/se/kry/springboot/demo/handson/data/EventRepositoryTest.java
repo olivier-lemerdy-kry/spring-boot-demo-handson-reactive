@@ -1,18 +1,19 @@
 package se.kry.springboot.demo.handson.data;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import javax.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
+import org.springframework.dao.UncategorizedDataAccessException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import reactor.core.publisher.Mono;
@@ -31,8 +32,9 @@ class EventRepositoryTest {
   void get_event() {
     var id = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
     var start = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
+    var end = start.plusHours(12);
 
-    template.insert(new Event(id, "Some event", start, start.plusHours(12))).block();
+    template.insert(new Event(id, "Some event", start, end, Instant.EPOCH, Instant.EPOCH)).block();
 
     var event = repository.findById(id);
 
@@ -71,22 +73,10 @@ class EventRepositoryTest {
         .assertNext(event -> {
           assertThat(event).isNotNull();
           assertThat(event.id()).isNotNull();
-          assertFalse(event.isNew());
           assertThat(event.title()).isEqualTo("Some event");
           assertThat(event.start()).hasToString("2001-01-01T00:00");
           assertThat(event.end()).hasToString("2001-01-01T12:00");
         }).verifyComplete();
-  }
-
-  @Test
-  void save_event_with_blank_title() {
-    var start = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
-
-    repository.save(Event.from(" ", start, start.plusHours(12)))
-        .as(StepVerifier::create)
-        .expectErrorSatisfies(exception ->
-            assertThat(exception).isInstanceOf(ConstraintViolationException.class)
-        ).verify();
   }
 
   @Test
@@ -97,7 +87,9 @@ class EventRepositoryTest {
     repository.save(Event.from(title, start, start.plusHours(12)))
         .as(StepVerifier::create)
         .expectErrorSatisfies(exception ->
-            assertThat(exception).isInstanceOf(ConstraintViolationException.class)
+            assertThat(exception)
+                .isInstanceOf(UncategorizedDataAccessException.class)
+                .hasMessageContaining("Value too long for column \"TITLE VARCHAR(256)\"")
         ).verify();
   }
 
