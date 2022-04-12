@@ -1,18 +1,18 @@
 package se.kry.springboot.demo.handson;
 
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Optional;
+import com.jayway.jsonpath.JsonPath;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.UUID;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -21,13 +21,11 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import reactor.test.StepVerifier;
-import se.kry.springboot.demo.handson.data.Event;
 import se.kry.springboot.demo.handson.data.EventRepository;
 
 @SpringBootTest
 @Testcontainers
 @AutoConfigureWebTestClient
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class ApplicationTest {
 
   @Container
@@ -50,8 +48,15 @@ class ApplicationTest {
   }
 
   @Test
-  @Order(1)
-  void create_event() {
+  void scenario() throws IOException {
+    var id = step1_create_event();
+    step2_read_events();
+    step3_update_event(id);
+    step4_read_event(id);
+    step5_delete_event(id);
+  }
+
+  UUID step1_create_event() throws IOException {
     assertRepositoryCountIs(0);
 
     var payload = objectMapper.createObjectNode()
@@ -60,7 +65,7 @@ class ApplicationTest {
         .put("end", "2001-01-01T12:00:00")
         .toString();
 
-    webTestClient.post().uri("/api/v1/events")
+    var result = webTestClient.post().uri("/api/v1/events")
         .contentType(MediaType.APPLICATION_JSON)
         .bodyValue(payload)
         .exchange()
@@ -68,14 +73,17 @@ class ApplicationTest {
         .expectBody()
         .jsonPath("$.title").isEqualTo("Some event")
         .jsonPath("$.start").isEqualTo("2001-01-01T00:00:00")
-        .jsonPath("$.end").isEqualTo("2001-01-01T12:00:00");
+        .jsonPath("$.end").isEqualTo("2001-01-01T12:00:00")
+        .returnResult();
 
     assertRepositoryCountIs(1);
+
+    try (InputStream stream = new ByteArrayInputStream(requireNonNull(result.getResponseBodyContent()))) {
+      return UUID.fromString(JsonPath.read(stream, "$.id"));
+    }
   }
 
-  @Test
-  @Order(2)
-  void read_events() {
+  void step2_read_events() {
     assertRepositoryCountIs(1);
 
     webTestClient.get().uri("/api/v1/events")
@@ -88,9 +96,7 @@ class ApplicationTest {
         .jsonPath("$.content[0].end").isEqualTo("2001-01-01T12:00:00");
   }
 
-  @Test
-  @Order(3)
-  void update_event() {
+  void step3_update_event(UUID id) {
     assertRepositoryCountIs(1);
 
     var payload = objectMapper.createObjectNode()
@@ -99,7 +105,7 @@ class ApplicationTest {
         .put("end", "2001-01-01T13:00:00")
         .toString();
 
-    webTestClient.patch().uri("/api/v1/events/{id}", findFirstEventId())
+    webTestClient.patch().uri("/api/v1/events/{id}", id)
         .contentType(MediaType.APPLICATION_JSON)
         .bodyValue(payload)
         .exchange()
@@ -110,12 +116,10 @@ class ApplicationTest {
         .jsonPath("$.end").isEqualTo("2001-01-01T13:00:00");
   }
 
-  @Test
-  @Order(4)
-  void read_event() {
+  void step4_read_event(UUID id) {
     assertRepositoryCountIs(1);
 
-    webTestClient.get().uri("/api/v1/events/{id}", findFirstEventId())
+    webTestClient.get().uri("/api/v1/events/{id}", id)
         .exchange()
         .expectStatus().isOk()
         .expectBody()
@@ -124,12 +128,10 @@ class ApplicationTest {
         .jsonPath("$.end").isEqualTo("2001-01-01T13:00:00");
   }
 
-  @Test
-  @Order(5)
-  void delete_event() {
+  void step5_delete_event(UUID id) {
     assertRepositoryCountIs(1);
 
-    webTestClient.delete().uri("/api/v1/events/{id}", findFirstEventId())
+    webTestClient.delete().uri("/api/v1/events/{id}", id)
         .exchange()
         .expectStatus().isOk();
 
@@ -141,12 +143,5 @@ class ApplicationTest {
         .as(StepVerifier::create)
         .assertNext(count -> assertThat(count).isEqualTo(value))
         .verifyComplete();
-  }
-
-  private UUID findFirstEventId() {
-    return Optional.ofNullable(
-            repository.findBy(Pageable.ofSize(1)).blockFirst())
-        .map(Event::getId)
-        .orElseThrow();
   }
 }
