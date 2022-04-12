@@ -2,8 +2,7 @@ package se.kry.springboot.demo.handson;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
-import java.io.InputStream;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.MethodOrderer;
@@ -11,42 +10,59 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import reactor.test.StepVerifier;
 import se.kry.springboot.demo.handson.data.Event;
 import se.kry.springboot.demo.handson.data.EventRepository;
 
 @SpringBootTest
+@Testcontainers
 @AutoConfigureWebTestClient
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class ApplicationTest {
 
-  @Value("classpath:se/kry/springboot/demo/handson/domain/EventCreationRequest.json")
-  private Resource eventCreationRequestJson;
-
-  @Value("classpath:se/kry/springboot/demo/handson/domain/EventUpdateRequest.json")
-  private Resource eventUpdateRequestJson;
+  @Container
+  private static final MySQLContainer<?> mySql = new MySQLContainer<>("mysql:8");
 
   @Autowired
   private WebTestClient webTestClient;
 
   @Autowired
+  private ObjectMapper objectMapper;
+
+  @Autowired
   private EventRepository repository;
+
+  @DynamicPropertySource
+  static void mySqlProperties(DynamicPropertyRegistry registry) {
+    registry.add("spring.datasource.url", mySql::getJdbcUrl);
+    registry.add("spring.datasource.username", mySql::getUsername);
+    registry.add("spring.datasource.password", mySql::getPassword);
+  }
 
   @Test
   @Order(1)
   void create_event() throws Exception {
     assertRepositoryCountIs(0);
 
+    var payload = objectMapper.createObjectNode()
+        .put("title", "Some event")
+        .put("start", "2001-01-01T00:00:00")
+        .put("end", "2001-01-01T12:00:00")
+        .toString();
+
     webTestClient.post().uri("/api/v1/events")
         .contentType(MediaType.APPLICATION_JSON)
-        .bodyValue(readJson(eventCreationRequestJson))
+        .bodyValue(payload)
         .exchange()
         .expectStatus().isCreated()
         .expectBody()
@@ -77,9 +93,15 @@ class ApplicationTest {
   void update_event() throws Exception {
     assertRepositoryCountIs(1);
 
+    var payload = objectMapper.createObjectNode()
+        .put("title", "Some other event")
+        .put("start", "2001-01-01T01:00:00")
+        .put("end", "2001-01-01T13:00:00")
+        .toString();
+
     webTestClient.patch().uri("/api/v1/events/{id}", findFirstEventId())
         .contentType(MediaType.APPLICATION_JSON)
-        .bodyValue(readJson(eventUpdateRequestJson))
+        .bodyValue(payload)
         .exchange()
         .expectStatus().isOk()
         .expectBody()
@@ -119,12 +141,6 @@ class ApplicationTest {
         .as(StepVerifier::create)
         .assertNext(count -> assertThat(count).isEqualTo(value))
         .verifyComplete();
-  }
-
-  private byte[] readJson(Resource resource) throws IOException {
-    try (InputStream json = resource.getInputStream()) {
-      return json.readAllBytes();
-    }
   }
 
   private UUID findFirstEventId() {

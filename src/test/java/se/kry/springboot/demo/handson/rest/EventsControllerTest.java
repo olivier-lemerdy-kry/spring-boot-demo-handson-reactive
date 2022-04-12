@@ -44,9 +44,9 @@ class EventsControllerTest {
         Mono.just(new EventResponse(id, "Some event", start, end)));
 
     var payload = objectMapper.createObjectNode()
-        .put("title", "Some Event")
+        .put("title", "Some event")
         .put("start", "2001-01-01T00:00:00")
-        .put("end", "2001-01-01T00:00:00")
+        .put("end", "2001-01-01T12:00:00")
         .toString();
 
     webTestClient.post().uri("/api/v1/events")
