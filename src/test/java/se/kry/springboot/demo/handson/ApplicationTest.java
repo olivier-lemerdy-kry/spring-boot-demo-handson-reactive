@@ -51,7 +51,7 @@ class ApplicationTest {
 
   @Test
   @Order(1)
-  void create_event() throws Exception {
+  void create_event() {
     assertRepositoryCountIs(0);
 
     var payload = objectMapper.createObjectNode()
@@ -90,7 +90,7 @@ class ApplicationTest {
 
   @Test
   @Order(3)
-  void update_event() throws Exception {
+  void update_event() {
     assertRepositoryCountIs(1);
 
     var payload = objectMapper.createObjectNode()
