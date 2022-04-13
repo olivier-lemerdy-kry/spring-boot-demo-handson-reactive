@@ -8,13 +8,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Month;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
@@ -135,14 +137,60 @@ class EventsControllerTest {
 
   @Test
   void read_events() {
-    when(service.getEvents(any()))
-        .thenReturn(Mono.just(Page.empty()));
+    var uuid1 = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
+    var start1 = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
+    var end1 = start1.plusHours(12);
+
+    var uuid2 = UUID.fromString("8ebea9a7-e0ef-4a62-a729-aff26134f9d8");
+    var start2 = start1.plusHours(1);
+    var end2 = end1.plusHours(1);
+
+    var content = List.of(
+        new EventResponse(uuid1, "Some event", start1, end1),
+        new EventResponse(uuid2, "Some other event", start2, end2)
+    );
+
+    var pageable = PageRequest.ofSize(20);
+
+    when(service.getEvents(pageable))
+        .thenReturn(Mono.just(new PageImpl<>(content, pageable, content.size())));
 
     webTestClient.get().uri("/api/v1/events")
         .exchange()
         .expectStatus().isOk()
         .expectBody()
-        .jsonPath("$.content").isArray();
+        .jsonPath("$").isMap()
+        .jsonPath("$.content").isArray()
+        .jsonPath("$.content[0].id").isEqualTo("38a14a82-d5a2-4210-9d61-cc3577bfa5df")
+        .jsonPath("$.content[0].title").isEqualTo("Some event")
+        .jsonPath("$.content[0].start").isEqualTo("2001-01-01T00:00:00")
+        .jsonPath("$.content[0].end").isEqualTo("2001-01-01T12:00:00")
+        .jsonPath("$.content[1].id").isEqualTo("8ebea9a7-e0ef-4a62-a729-aff26134f9d8")
+        .jsonPath("$.content[1].title").isEqualTo("Some other event")
+        .jsonPath("$.content[1].start").isEqualTo("2001-01-01T01:00:00")
+        .jsonPath("$.content[1].end").isEqualTo("2001-01-01T13:00:00")
+        .jsonPath("$.pageable").isMap()
+        .jsonPath("$.pageable.sort").isMap()
+        .jsonPath("$.pageable.sort.empty").isEqualTo(true)
+        .jsonPath("$.pageable.sort.unsorted").isEqualTo(true)
+        .jsonPath("$.pageable.sort.sorted").isEqualTo(false)
+        .jsonPath("$.pageable.offset").isEqualTo(0)
+        .jsonPath("$.pageable.pageNumber").isEqualTo(0)
+        .jsonPath("$.pageable.pageSize").isEqualTo(20)
+        .jsonPath("$.pageable.paged").isEqualTo(true)
+        .jsonPath("$.pageable.unpaged").isEqualTo(false)
+        .jsonPath("$.totalPages").isEqualTo(1)
+        .jsonPath("$.totalElements").isEqualTo(2)
+        .jsonPath("$.last").isEqualTo(true)
+        .jsonPath("$.size").isEqualTo(20)
+        .jsonPath("$.number").isEqualTo(0)
+        .jsonPath("$.sort").isMap()
+        .jsonPath("$.sort.empty").isEqualTo(true)
+        .jsonPath("$.sort.unsorted").isEqualTo(true)
+        .jsonPath("$.sort.sorted").isEqualTo(false)
+        .jsonPath("$.numberOfElements").isEqualTo(2)
+        .jsonPath("$.first").isEqualTo(true)
+        .jsonPath("$.empty").isEqualTo(false);
   }
 
   @Test
