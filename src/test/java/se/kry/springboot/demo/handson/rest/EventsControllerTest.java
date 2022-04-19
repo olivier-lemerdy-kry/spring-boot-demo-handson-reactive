@@ -56,7 +56,9 @@ class EventsControllerTest {
         .bodyValue(payload)
         .exchange()
         .expectStatus().isCreated()
+        .expectHeader().valueEquals("Location", "/api/v1/events/38a14a82-d5a2-4210-9d61-cc3577bfa5df")
         .expectBody()
+        .jsonPath("$.id").isEqualTo("38a14a82-d5a2-4210-9d61-cc3577bfa5df")
         .jsonPath("$.title").isEqualTo("Some event")
         .jsonPath("$.start").isEqualTo("2001-01-01T00:00:00")
         .jsonPath("$.end").isEqualTo("2001-01-01T12:00:00");
