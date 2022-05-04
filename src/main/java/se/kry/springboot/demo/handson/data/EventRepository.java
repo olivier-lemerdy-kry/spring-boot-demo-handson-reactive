@@ -1,12 +1,12 @@
 package se.kry.springboot.demo.handson.data;
 
 
+import io.reactivex.Flowable;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.r2dbc.repository.R2dbcRepository;
-import reactor.core.publisher.Flux;
+import org.springframework.data.repository.reactive.RxJava2SortingRepository;
 
-public interface EventRepository extends R2dbcRepository<Event, UUID> {
+public interface EventRepository extends RxJava2SortingRepository<Event, UUID> {
 
-  Flux<Event> findBy(Pageable pageable);
+  Flowable<Event> findBy(Pageable pageable);
 }

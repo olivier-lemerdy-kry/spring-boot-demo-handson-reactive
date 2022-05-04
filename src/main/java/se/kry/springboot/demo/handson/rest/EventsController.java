@@ -1,5 +1,8 @@
 package se.kry.springboot.demo.handson.rest;
 
+import io.reactivex.Completable;
+import io.reactivex.Maybe;
+import io.reactivex.Single;
 import java.util.UUID;
 import javax.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -14,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
-import reactor.core.publisher.Mono;
 import se.kry.springboot.demo.handson.domain.EventCreationRequest;
 import se.kry.springboot.demo.handson.domain.EventResponse;
 import se.kry.springboot.demo.handson.domain.EventUpdateRequest;
@@ -31,8 +33,8 @@ public class EventsController {
   }
 
   @PostMapping
-  Mono<ResponseEntity<EventResponse>> createEvent(@Valid @RequestBody EventCreationRequest eventCreationRequest,
-                                                  UriComponentsBuilder builder) {
+  Single<ResponseEntity<EventResponse>> createEvent(@Valid @RequestBody EventCreationRequest eventCreationRequest,
+                                                    UriComponentsBuilder builder) {
     return service.createEvent(eventCreationRequest).map(response -> {
       var location = builder.pathSegment("api", "v1", "events", "{id}").build(response.id());
       return ResponseEntity.created(location).body(response);
@@ -40,19 +42,19 @@ public class EventsController {
   }
 
   @GetMapping
-  Mono<Page<EventResponse>> readEvents(Pageable pageable) {
+  Single<Page<EventResponse>> readEvents(Pageable pageable) {
     return service.getEvents(pageable);
   }
 
   @GetMapping("{id}")
-  Mono<ResponseEntity<EventResponse>> readEvent(@PathVariable UUID id) {
+  Maybe<ResponseEntity<EventResponse>> readEvent(@PathVariable UUID id) {
     return service.getEvent(id)
         .map(ResponseEntity::ok)
         .defaultIfEmpty(ResponseEntity.notFound().build());
   }
 
   @PatchMapping("{id}")
-  Mono<ResponseEntity<EventResponse>> updateEvent(
+  Maybe<ResponseEntity<EventResponse>> updateEvent(
       @PathVariable UUID id,
       @Valid @RequestBody EventUpdateRequest eventUpdateRequest) {
     return service.updateEvent(id, eventUpdateRequest)
@@ -61,7 +63,7 @@ public class EventsController {
   }
 
   @DeleteMapping("{id}")
-  Mono<Void> deleteEvent(@PathVariable UUID id) {
+  Completable deleteEvent(@PathVariable UUID id) {
     return service.deleteEvent(id);
   }
 }

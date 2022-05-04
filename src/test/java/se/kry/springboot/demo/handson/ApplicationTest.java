@@ -140,8 +140,8 @@ class ApplicationTest {
 
   private void assertRepositoryCountIs(long value) {
     repository.count()
-        .as(StepVerifier::create)
-        .assertNext(count -> assertThat(count).isEqualTo(value))
-        .verifyComplete();
+        .test()
+        .assertValue(value)
+        .assertComplete();
   }
 }

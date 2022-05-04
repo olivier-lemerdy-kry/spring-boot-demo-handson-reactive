@@ -1,5 +1,8 @@
 package se.kry.springboot.demo.handson.services;
 
+import io.reactivex.Completable;
+import io.reactivex.Maybe;
+import io.reactivex.Single;
 import java.util.UUID;
 import javax.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
@@ -7,7 +10,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import reactor.core.publisher.Mono;
 import se.kry.springboot.demo.handson.data.Event;
 import se.kry.springboot.demo.handson.data.EventRepository;
 import se.kry.springboot.demo.handson.domain.EventCreationRequest;
@@ -24,33 +26,33 @@ public class EventService {
   }
 
   @Transactional
-  public Mono<EventResponse> createEvent(@NotNull EventCreationRequest eventCreationRequest) {
+  public Single<EventResponse> createEvent(@NotNull EventCreationRequest eventCreationRequest) {
     return repository.save(newEventFromCreationRequest(eventCreationRequest))
         .map(this::responseFromEvent);
   }
 
-  public Mono<Page<EventResponse>> getEvents(@NotNull Pageable pageable) {
-    return Mono.zip(
+  public Single<Page<EventResponse>> getEvents(@NotNull Pageable pageable) {
+    return Single.zip(
         repository.count(),
-        repository.findBy(pageable).collectList(),
+        repository.findBy(pageable).toList(),
         (count, list) -> new PageImpl<>(list, pageable, count).map(this::responseFromEvent));
   }
 
-  public Mono<EventResponse> getEvent(@NotNull UUID id) {
+  public Maybe<EventResponse> getEvent(@NotNull UUID id) {
     return repository.findById(id)
         .map(this::responseFromEvent);
   }
 
   @Transactional
-  public Mono<EventResponse> updateEvent(@NotNull UUID id, @NotNull EventUpdateRequest eventUpdateRequest) {
+  public Maybe<EventResponse> updateEvent(@NotNull UUID id, @NotNull EventUpdateRequest eventUpdateRequest) {
     return repository.findById(id)
         .map(event -> updateEventFromUpdateRequest(event, eventUpdateRequest))
-        .flatMap(repository::save)
+        .flatMapSingleElement(repository::save)
         .map(this::responseFromEvent);
   }
 
   @Transactional
-  public Mono<Void> deleteEvent(@NotNull UUID id) {
+  public Completable deleteEvent(@NotNull UUID id) {
     return repository.deleteById(id);
   }
 

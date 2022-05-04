@@ -16,7 +16,6 @@ import org.springframework.dao.UncategorizedDataAccessException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
 
 @DataR2dbcTest
 class EventRepositoryTest {
@@ -37,12 +36,14 @@ class EventRepositoryTest {
 
     var event = repository.findById(id);
 
-    event.as(StepVerifier::create).assertNext(actual -> {
-      assertThat(actual.id()).isEqualTo(id);
-      assertThat(actual.title()).isEqualTo("Some event");
-      assertThat(actual.start()).hasToString("2001-01-01T00:00");
-      assertThat(actual.end()).hasToString("2001-01-01T12:00");
-    }).verifyComplete();
+    event.test()
+        .assertValue(actual -> {
+          assertThat(actual.id()).isEqualTo(id);
+          assertThat(actual.title()).isEqualTo("Some event");
+          assertThat(actual.start()).hasToString("2001-01-01T00:00");
+          assertThat(actual.end()).hasToString("2001-01-01T12:00");
+          return true;
+        }).assertComplete();
   }
 
   @Test
@@ -56,11 +57,12 @@ class EventRepositoryTest {
     Mono.when(inserts).block();
 
     repository.findBy(Pageable.ofSize(20))
-        .collectList()
-        .as(StepVerifier::create)
-        .assertNext(events ->
-            assertThat(events).hasSize(20)
-        ).verifyComplete();
+        .toList()
+        .test()
+        .assertValue(events -> {
+          assertThat(events).hasSize(20);
+          return true;
+        }).assertComplete();
   }
 
   @Test
@@ -69,14 +71,15 @@ class EventRepositoryTest {
     var end = start.plusHours(12);
 
     repository.save(Event.from("Some event", start, end))
-        .as(StepVerifier::create)
-        .assertNext(event -> {
+        .test()
+        .assertValue(event -> {
           assertThat(event).isNotNull();
           assertThat(event.id()).isNotNull();
           assertThat(event.title()).isEqualTo("Some event");
           assertThat(event.start()).hasToString("2001-01-01T00:00");
           assertThat(event.end()).hasToString("2001-01-01T12:00");
-        }).verifyComplete();
+          return true;
+        }).assertComplete();
   }
 
   @Test
@@ -86,12 +89,13 @@ class EventRepositoryTest {
     var end = start.plusHours(12);
 
     repository.save(Event.from(title, start, end))
-        .as(StepVerifier::create)
-        .expectErrorSatisfies(exception ->
-            assertThat(exception)
-                .isInstanceOf(UncategorizedDataAccessException.class)
-                .hasMessageContaining("Value too long for column \"TITLE VARCHAR(256)\"")
-        ).verify();
+        .test()
+        .assertError(exception -> {
+          assertThat(exception)
+              .isInstanceOf(UncategorizedDataAccessException.class)
+              .hasMessageContaining("Value too long for column \"TITLE VARCHAR(256)\"");
+          return true;
+        });
   }
 
 }

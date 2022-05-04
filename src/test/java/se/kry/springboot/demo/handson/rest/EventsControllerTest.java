@@ -5,6 +5,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.reactivex.Maybe;
+import io.reactivex.Single;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Month;
@@ -19,7 +21,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import reactor.core.publisher.Mono;
 import se.kry.springboot.demo.handson.domain.EventResponse;
 import se.kry.springboot.demo.handson.domain.EventUpdateRequest;
 import se.kry.springboot.demo.handson.services.EventService;
@@ -43,7 +44,7 @@ class EventsControllerTest {
     var end = start.plusHours(12);
 
     when(service.createEvent(any())).thenReturn(
-        Mono.just(new EventResponse(id, "Some event", start, end)));
+        Single.just(new EventResponse(id, "Some event", start, end)));
 
     var payload = objectMapper.createObjectNode()
         .put("title", "Some event")
@@ -155,7 +156,7 @@ class EventsControllerTest {
     var pageable = PageRequest.ofSize(20);
 
     when(service.getEvents(pageable))
-        .thenReturn(Mono.just(new PageImpl<>(content, pageable, content.size())));
+        .thenReturn(Single.just(new PageImpl<>(content, pageable, content.size())));
 
     webTestClient.get().uri("/api/v1/events")
         .exchange()
@@ -202,7 +203,7 @@ class EventsControllerTest {
     var end = start.plusHours(12);
 
     when(service.getEvent(id)).thenReturn(
-        Mono.just(new EventResponse(id, "Some event", start, end)));
+        Maybe.just(new EventResponse(id, "Some event", start, end)));
 
     webTestClient.get().uri("/api/v1/events/{id}", id)
         .exchange()
@@ -217,7 +218,7 @@ class EventsControllerTest {
   void read_event_with_unknown_id() {
     var id = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
 
-    when(service.getEvent(id)).thenReturn(Mono.empty());
+    when(service.getEvent(id)).thenReturn(Maybe.empty());
 
     webTestClient.get().uri("/api/v1/events/{id}", id)
         .exchange()
@@ -232,7 +233,7 @@ class EventsControllerTest {
 
     when(service.updateEvent(uuid,
         new EventUpdateRequest(Optional.of("Some other event"), Optional.empty(), Optional.empty())))
-        .thenReturn(Mono.just(new EventResponse(uuid, "Some other event", start, end)));
+        .thenReturn(Maybe.just(new EventResponse(uuid, "Some other event", start, end)));
 
     var payload = objectMapper.createObjectNode()
         .put("title", "Some other event")
@@ -263,7 +264,7 @@ class EventsControllerTest {
     var uuid = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
 
     when(service.updateEvent(eq(uuid), any()))
-        .thenReturn(Mono.empty());
+        .thenReturn(Maybe.empty());
 
     var payload = objectMapper.createObjectNode()
         .put("title", "Some other event")
