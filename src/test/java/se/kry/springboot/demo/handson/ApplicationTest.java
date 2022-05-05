@@ -17,7 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import reactor.test.StepVerifier;
@@ -29,7 +29,7 @@ import se.kry.springboot.demo.handson.data.EventRepository;
 class ApplicationTest {
 
   @Container
-  private static final MySQLContainer<?> mySql = new MySQLContainer<>("mysql:8");
+  private static final MongoDBContainer mongoDb = new MongoDBContainer("mongo:4.0.10");
 
   @Autowired
   private WebTestClient webTestClient;
@@ -42,9 +42,7 @@ class ApplicationTest {
 
   @DynamicPropertySource
   static void mySqlProperties(DynamicPropertyRegistry registry) {
-    registry.add("spring.datasource.url", mySql::getJdbcUrl);
-    registry.add("spring.datasource.username", mySql::getUsername);
-    registry.add("spring.datasource.password", mySql::getPassword);
+    registry.add("spring.data.mongodb.uri", mongoDb::getReplicaSetUrl);
   }
 
   @Test

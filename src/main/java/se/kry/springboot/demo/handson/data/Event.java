@@ -8,14 +8,14 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.domain.Persistable;
-import org.springframework.data.relational.core.mapping.Table;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 import se.kry.springboot.demo.handson.domain.EventConstants;
 
-@Table
-public record Event(@Id UUID id,
+@Document
+public record Event(@MongoId UUID id,
                     @NotBlank @Size(max = EventConstants.SIZE_TITLE) String title,
                     @NotNull LocalDateTime start,
                     @NotNull LocalDateTime end,

@@ -5,10 +5,10 @@ import java.util.Optional;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.auditing.DateTimeProvider;
-import org.springframework.data.r2dbc.config.EnableR2dbcAuditing;
+import org.springframework.data.mongodb.config.EnableReactiveMongoAuditing;
 
 @Configuration
-@EnableR2dbcAuditing(dateTimeProviderRef = InfraDataConfiguration.DATE_TIME_PROVIDER_NAME)
+@EnableReactiveMongoAuditing(dateTimeProviderRef = InfraDataConfiguration.DATE_TIME_PROVIDER_NAME)
 public class InfraDataConfiguration {
 
   static final String DATE_TIME_PROVIDER_NAME = "dateTimeProvider";

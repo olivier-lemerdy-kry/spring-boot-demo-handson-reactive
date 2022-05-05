@@ -11,18 +11,18 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
+import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.dao.UncategorizedDataAccessException;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-@DataR2dbcTest
+@DataMongoTest
 class EventRepositoryTest {
 
   @Autowired
-  private R2dbcEntityTemplate template;
+  private ReactiveMongoTemplate template;
 
   @Autowired
   private EventRepository repository;
@@ -77,21 +77,6 @@ class EventRepositoryTest {
           assertThat(event.start()).hasToString("2001-01-01T00:00");
           assertThat(event.end()).hasToString("2001-01-01T12:00");
         }).verifyComplete();
-  }
-
-  @Test
-  void save_event_with_too_long_title() {
-    var title = "X".repeat(300);
-    var start = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
-    var end = start.plusHours(12);
-
-    repository.save(Event.from(title, start, end))
-        .as(StepVerifier::create)
-        .expectErrorSatisfies(exception ->
-            assertThat(exception)
-                .isInstanceOf(UncategorizedDataAccessException.class)
-                .hasMessageContaining("Value too long for column \"TITLE VARCHAR(256)\"")
-        ).verify();
   }
 
 }
