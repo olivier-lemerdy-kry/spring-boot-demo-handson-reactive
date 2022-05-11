@@ -1,8 +1,8 @@
 package se.kry.springboot.demo.handson.services;
 
-import io.reactivex.Completable;
-import io.reactivex.Maybe;
-import io.reactivex.Single;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Maybe;
+import io.reactivex.rxjava3.core.Single;
 import java.util.UUID;
 import javax.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
@@ -47,7 +47,7 @@ public class EventService {
   public Maybe<EventResponse> updateEvent(@NotNull UUID id, @NotNull EventUpdateRequest eventUpdateRequest) {
     return repository.findById(id)
         .map(event -> updateEventFromUpdateRequest(event, eventUpdateRequest))
-        .flatMapSingleElement(repository::save)
+        .flatMapSingle(repository::save)
         .map(this::responseFromEvent);
   }
 

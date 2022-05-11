@@ -1,8 +1,7 @@
 package se.kry.springboot.demo.handson.rest;
 
-import io.reactivex.Completable;
-import io.reactivex.Maybe;
-import io.reactivex.Single;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Single;
 import java.util.UUID;
 import javax.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -47,14 +46,14 @@ public class EventsController {
   }
 
   @GetMapping("{id}")
-  Maybe<ResponseEntity<EventResponse>> readEvent(@PathVariable UUID id) {
+  Single<ResponseEntity<EventResponse>> readEvent(@PathVariable UUID id) {
     return service.getEvent(id)
         .map(ResponseEntity::ok)
         .defaultIfEmpty(ResponseEntity.notFound().build());
   }
 
   @PatchMapping("{id}")
-  Maybe<ResponseEntity<EventResponse>> updateEvent(
+  Single<ResponseEntity<EventResponse>> updateEvent(
       @PathVariable UUID id,
       @Valid @RequestBody EventUpdateRequest eventUpdateRequest) {
     return service.updateEvent(id, eventUpdateRequest)
