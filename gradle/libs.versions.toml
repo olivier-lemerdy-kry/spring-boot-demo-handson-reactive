@@ -1,0 +1,14 @@
+[versions]
+java = "17"
+spring-boot = "2.6.7"
+spring-cloud = "2021.0.2"
+spring-dependencies-management = "1.0.11.RELEASE"
+testcontainers = "1.16.3"
+
+[libraries]
+spring-cloud-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "spring-cloud" }
+testcontainers-bom = { module = "org.springframework.cloud:spring-cloud-dependencies", version.ref = "testcontainers" }
+
+[plugins]
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
+spring-dependencies-management = { id = "io.spring.dependency-management", version.ref = "spring-dependencies-management" }
