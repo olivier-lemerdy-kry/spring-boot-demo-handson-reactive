@@ -1,12 +1,12 @@
 plugins {
-    id 'org.springframework.boot' version '2.6.7'
-    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.spring.dependencies.management)
     id 'java'
 }
 
 group = 'se.kry.springboot.demo.handson'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '17'
+sourceCompatibility = libs.versions.java.get()
 
 configurations {
     compileOnly {
@@ -19,8 +19,8 @@ repositories {
 }
 
 ext {
-    set('springCloudVersion', "2021.0.2")
-    set('testcontainersVersion', "1.16.3")
+    set('springCloudVersion', libs.versions.spring.cloud.get())
+    set('testcontainersVersion', libs.versions.testcontainers.get())
 }
 
 dependencies {
