@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
 import java.util.Optional;
@@ -25,8 +24,8 @@ class EventUpdateRequestJsonTest {
 
     assertThat(eventUpdateRequest).isNotNull();
     assertThat(eventUpdateRequest.title()).isEmpty();
-    assertThat(eventUpdateRequest.start()).isEmpty();
-    assertThat(eventUpdateRequest.end()).isEmpty();
+    assertThat(eventUpdateRequest.startTime()).isEmpty();
+    assertThat(eventUpdateRequest.endTime()).isEmpty();
   }
 
   @Test
@@ -35,7 +34,7 @@ class EventUpdateRequestJsonTest {
 
     var jsonContent = jacksonTester.write(eventUpdateRequest);
 
-    assertThat(jsonContent).hasEmptyJsonPathValue("$.title").hasEmptyJsonPathValue("$.start").hasEmptyJsonPathValue("$.end");
+    assertThat(jsonContent).hasEmptyJsonPathValue("$.title").hasEmptyJsonPathValue("$.startTime").hasEmptyJsonPathValue("$.endTime");
   }
 
   @Test
@@ -47,8 +46,8 @@ class EventUpdateRequestJsonTest {
 
     assertThat(eventUpdateRequest).isNotNull();
     assertThat(eventUpdateRequest.title()).hasValue("Some other event");
-    assertThat(eventUpdateRequest.start()).hasValue(start);
-    assertThat(eventUpdateRequest.end()).hasValue(end);
+    assertThat(eventUpdateRequest.startTime()).hasValue(start);
+    assertThat(eventUpdateRequest.endTime()).hasValue(end);
   }
 
   @Test

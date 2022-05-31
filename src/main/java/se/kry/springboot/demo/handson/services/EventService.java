@@ -57,19 +57,19 @@ public class EventService {
   private Event newEventFromCreationRequest(@NotNull EventCreationRequest eventCreationRequest) {
     return Event.from(
         eventCreationRequest.title(),
-        eventCreationRequest.start(),
-        eventCreationRequest.end());
+        eventCreationRequest.startTime(),
+        eventCreationRequest.endTime());
   }
 
   private Event updateEventFromUpdateRequest(@NotNull Event event, @NotNull EventUpdateRequest eventUpdateRequest) {
     return event.copy(
         title -> eventUpdateRequest.title().orElse(title),
-        start -> eventUpdateRequest.start().orElse(start),
-        end -> eventUpdateRequest.end().orElse(end)
+        start -> eventUpdateRequest.startTime().orElse(start),
+        end -> eventUpdateRequest.endTime().orElse(end)
     );
   }
 
   private EventResponse responseFromEvent(Event event) {
-    return new EventResponse(event.id(), event.title(), event.start(), event.end());
+    return new EventResponse(event.id(), event.title(), event.startTime(), event.endTime());
   }
 }
