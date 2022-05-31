@@ -10,6 +10,6 @@ import javax.validation.constraints.Size;
 
 public record EventResponse(@NotNull UUID id,
                             @NotBlank @Size(max = SIZE_TITLE) String title,
-                            @NotNull LocalDateTime start,
-                            @NotNull LocalDateTime end) {
+                            @NotNull LocalDateTime startTime,
+                            @NotNull LocalDateTime endTime) {
 }

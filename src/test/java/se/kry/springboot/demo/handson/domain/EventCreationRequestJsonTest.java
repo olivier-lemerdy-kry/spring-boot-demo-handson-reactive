@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
 import org.junit.jupiter.api.Test;
@@ -34,8 +33,8 @@ class EventCreationRequestJsonTest {
 
     assertThat(event).isNotNull();
     assertThat(event.title()).isEqualTo("Some event");
-    assertThat(event.start()).hasToString("2001-01-01T00:00");
-    assertThat(event.end()).hasToString("2001-01-01T12:00");
+    assertThat(event.startTime()).hasToString("2001-01-01T00:00");
+    assertThat(event.endTime()).hasToString("2001-01-01T12:00");
   }
 
 }

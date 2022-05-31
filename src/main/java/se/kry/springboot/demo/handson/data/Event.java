@@ -17,8 +17,8 @@ import se.kry.springboot.demo.handson.domain.EventConstants;
 @Table
 public record Event(@Id UUID id,
                     @NotBlank @Size(max = EventConstants.SIZE_TITLE) String title,
-                    @NotNull LocalDateTime start,
-                    @NotNull LocalDateTime end,
+                    @NotNull LocalDateTime startTime,
+                    @NotNull LocalDateTime endTime,
                     @CreatedDate Instant createdDate,
                     @LastModifiedDate Instant lastModifiedDate) implements Persistable<UUID> {
 
@@ -39,7 +39,7 @@ public record Event(@Id UUID id,
 
   public Event copy(UnaryOperator<String> titleFunction, UnaryOperator<LocalDateTime> startFunction,
                     UnaryOperator<LocalDateTime> endFunction) {
-    return new Event(id, titleFunction.apply(title), startFunction.apply(start), endFunction.apply(end), createdDate,
+    return new Event(id, titleFunction.apply(title), startFunction.apply(startTime), endFunction.apply(endTime), createdDate,
         lastModifiedDate);
   }
 }
