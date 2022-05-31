@@ -1,7 +1,6 @@
 package se.kry.springboot.demo.handson;
 
 import static java.util.Objects.requireNonNull;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
@@ -20,7 +19,6 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import reactor.test.StepVerifier;
 import se.kry.springboot.demo.handson.data.EventRepository;
 
 @SpringBootTest
@@ -61,8 +59,8 @@ class ApplicationTest {
 
     var payload = objectMapper.createObjectNode()
         .put("title", "Some event")
-        .put("start", "2001-01-01T00:00:00")
-        .put("end", "2001-01-01T12:00:00")
+        .put("startTime", "2001-01-01T00:00:00")
+        .put("endTime", "2001-01-01T12:00:00")
         .toString();
 
     var result = webTestClient.post().uri("/api/v1/events")
@@ -72,8 +70,8 @@ class ApplicationTest {
         .expectStatus().isCreated()
         .expectBody()
         .jsonPath("$.title").isEqualTo("Some event")
-        .jsonPath("$.start").isEqualTo("2001-01-01T00:00:00")
-        .jsonPath("$.end").isEqualTo("2001-01-01T12:00:00")
+        .jsonPath("$.startTime").isEqualTo("2001-01-01T00:00:00")
+        .jsonPath("$.endTime").isEqualTo("2001-01-01T12:00:00")
         .returnResult();
 
     assertRepositoryCountIs(1);
@@ -92,8 +90,8 @@ class ApplicationTest {
         .expectBody()
         .jsonPath("$.content").isArray()
         .jsonPath("$.content[0].title").isEqualTo("Some event")
-        .jsonPath("$.content[0].start").isEqualTo("2001-01-01T00:00:00")
-        .jsonPath("$.content[0].end").isEqualTo("2001-01-01T12:00:00");
+        .jsonPath("$.content[0].startTime").isEqualTo("2001-01-01T00:00:00")
+        .jsonPath("$.content[0].endTime").isEqualTo("2001-01-01T12:00:00");
   }
 
   void step3_update_event(UUID id) {
@@ -101,8 +99,8 @@ class ApplicationTest {
 
     var payload = objectMapper.createObjectNode()
         .put("title", "Some other event")
-        .put("start", "2001-01-01T01:00:00")
-        .put("end", "2001-01-01T13:00:00")
+        .put("startTime", "2001-01-01T01:00:00")
+        .put("endTime", "2001-01-01T13:00:00")
         .toString();
 
     webTestClient.patch().uri("/api/v1/events/{id}", id)
@@ -112,8 +110,8 @@ class ApplicationTest {
         .expectStatus().isOk()
         .expectBody()
         .jsonPath("$.title").isEqualTo("Some other event")
-        .jsonPath("$.start").isEqualTo("2001-01-01T01:00:00")
-        .jsonPath("$.end").isEqualTo("2001-01-01T13:00:00");
+        .jsonPath("$.startTime").isEqualTo("2001-01-01T01:00:00")
+        .jsonPath("$.endTime").isEqualTo("2001-01-01T13:00:00");
   }
 
   void step4_read_event(UUID id) {
@@ -124,8 +122,8 @@ class ApplicationTest {
         .expectStatus().isOk()
         .expectBody()
         .jsonPath("$.title").isEqualTo("Some other event")
-        .jsonPath("$.start").isEqualTo("2001-01-01T01:00:00")
-        .jsonPath("$.end").isEqualTo("2001-01-01T13:00:00");
+        .jsonPath("$.startTime").isEqualTo("2001-01-01T01:00:00")
+        .jsonPath("$.endTime").isEqualTo("2001-01-01T13:00:00");
   }
 
   void step5_delete_event(UUID id) {

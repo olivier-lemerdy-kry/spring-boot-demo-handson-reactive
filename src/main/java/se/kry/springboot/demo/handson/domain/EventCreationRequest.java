@@ -9,12 +9,12 @@ import javax.validation.constraints.Size;
 
 public record EventCreationRequest(
     @NotBlank @Size(max = SIZE_TITLE) String title,
-    @NotNull LocalDateTime start,
-    @NotNull LocalDateTime end) {
+    @NotNull LocalDateTime startTime,
+    @NotNull LocalDateTime endTime) {
 
   public EventCreationRequest {
-    if (start.isAfter(end)) {
-      throw new StartIsAfterEndException(start, end);
+    if (startTime.isAfter(endTime)) {
+      throw new StartIsAfterEndException(startTime, endTime);
     }
   }
 }
