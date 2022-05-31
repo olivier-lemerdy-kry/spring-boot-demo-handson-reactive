@@ -40,16 +40,16 @@ class EventsControllerTest {
   @Test
   void create_event() {
     var id = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
-    var start = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
-    var end = start.plusHours(12);
+    var startTime = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
+    var endTime = startTime.plusHours(12);
 
     when(service.createEvent(any())).thenReturn(
-        Single.just(new EventResponse(id, "Some event", start, end)));
+        Single.just(new EventResponse(id, "Some event", startTime, endTime)));
 
     var payload = objectMapper.createObjectNode()
         .put("title", "Some event")
-        .put("start", "2001-01-01T00:00:00")
-        .put("end", "2001-01-01T12:00:00")
+        .put("startTime", "2001-01-01T00:00:00")
+        .put("endTime", "2001-01-01T12:00:00")
         .toString();
 
     webTestClient.post().uri("/api/v1/events")
@@ -61,16 +61,16 @@ class EventsControllerTest {
         .expectBody()
         .jsonPath("$.id").isEqualTo("38a14a82-d5a2-4210-9d61-cc3577bfa5df")
         .jsonPath("$.title").isEqualTo("Some event")
-        .jsonPath("$.start").isEqualTo("2001-01-01T00:00:00")
-        .jsonPath("$.end").isEqualTo("2001-01-01T12:00:00");
+        .jsonPath("$.startTime").isEqualTo("2001-01-01T00:00:00")
+        .jsonPath("$.endTime").isEqualTo("2001-01-01T12:00:00");
   }
 
   @Test
   void create_event_with_blank_title() {
     var payload = objectMapper.createObjectNode()
         .put("title", " ")
-        .put("start", "2001-01-01T00:00:00")
-        .put("end", "2001-01-01T00:00:00")
+        .put("startTime", "2001-01-01T00:00:00")
+        .put("endTime", "2001-01-01T00:00:00")
         .toString();
 
     webTestClient.post().uri("/api/v1/events")
@@ -84,8 +84,8 @@ class EventsControllerTest {
   void create_event_with_too_long_title() {
     var payload = objectMapper.createObjectNode()
         .put("title", "X".repeat(300))
-        .put("start", "2001-01-01T00:00:00")
-        .put("end", "2001-01-01T12:00:00")
+        .put("startTime", "2001-01-01T00:00:00")
+        .put("endTime", "2001-01-01T12:00:00")
         .toString();
 
     webTestClient.post().uri("/api/v1/events")
@@ -99,7 +99,7 @@ class EventsControllerTest {
   void create_event_with_null_start() {
     var payload = objectMapper.createObjectNode()
         .put("title", "Some event")
-        .put("end", "2001-01-01T00:00:00")
+        .put("endTime", "2001-01-01T00:00:00")
         .toString();
 
     webTestClient.post().uri("/api/v1/events")
@@ -113,7 +113,7 @@ class EventsControllerTest {
   void create_event_with_null_end() {
     var payload = objectMapper.createObjectNode()
         .put("title", "Some event")
-        .put("start", "2001-01-01T00:00:00")
+        .put("startTime", "2001-01-01T00:00:00")
         .toString();
 
     webTestClient.post().uri("/api/v1/events")
@@ -127,8 +127,8 @@ class EventsControllerTest {
   void create_event_with_start_after_end() {
     var payload = objectMapper.createObjectNode()
         .put("title", "Some event")
-        .put("start", "2001-01-01T12:00:00")
-        .put("end", "2001-01-01T00:00:00")
+        .put("startTime", "2001-01-01T12:00:00")
+        .put("endTime", "2001-01-01T00:00:00")
         .toString();
 
     webTestClient.post().uri("/api/v1/events")
@@ -166,12 +166,12 @@ class EventsControllerTest {
         .jsonPath("$.content").isArray()
         .jsonPath("$.content[0].id").isEqualTo("38a14a82-d5a2-4210-9d61-cc3577bfa5df")
         .jsonPath("$.content[0].title").isEqualTo("Some event")
-        .jsonPath("$.content[0].start").isEqualTo("2001-01-01T00:00:00")
-        .jsonPath("$.content[0].end").isEqualTo("2001-01-01T12:00:00")
+        .jsonPath("$.content[0].startTime").isEqualTo("2001-01-01T00:00:00")
+        .jsonPath("$.content[0].endTime").isEqualTo("2001-01-01T12:00:00")
         .jsonPath("$.content[1].id").isEqualTo("8ebea9a7-e0ef-4a62-a729-aff26134f9d8")
         .jsonPath("$.content[1].title").isEqualTo("Some other event")
-        .jsonPath("$.content[1].start").isEqualTo("2001-01-01T01:00:00")
-        .jsonPath("$.content[1].end").isEqualTo("2001-01-01T13:00:00")
+        .jsonPath("$.content[1].startTime").isEqualTo("2001-01-01T01:00:00")
+        .jsonPath("$.content[1].endTime").isEqualTo("2001-01-01T13:00:00")
         .jsonPath("$.pageable").isMap()
         .jsonPath("$.pageable.sort").isMap()
         .jsonPath("$.pageable.sort.empty").isEqualTo(true)
@@ -210,8 +210,8 @@ class EventsControllerTest {
         .expectStatus().isOk()
         .expectBody()
         .jsonPath("$.title").isEqualTo("Some event")
-        .jsonPath("$.start").isEqualTo("2001-01-01T00:00:00")
-        .jsonPath("$.end").isEqualTo("2001-01-01T12:00:00");
+        .jsonPath("$.startTime").isEqualTo("2001-01-01T00:00:00")
+        .jsonPath("$.endTime").isEqualTo("2001-01-01T12:00:00");
   }
 
   @Test
@@ -297,8 +297,8 @@ class EventsControllerTest {
     var uuid = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
 
     var payload = objectMapper.createObjectNode()
-        .put("start", "2001-01-01T12:00:00")
-        .put("end", "2001-01-01T00:00:00")
+        .put("startTime", "2001-01-01T12:00:00")
+        .put("endTime", "2001-01-01T00:00:00")
         .toString();
 
     webTestClient.patch().uri("/api/v1/events/{id}", uuid)

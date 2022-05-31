@@ -36,8 +36,8 @@ class EventResponseJsonTest {
     assertThat(event).isNotNull();
     assertThat(event.id()).hasToString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
     assertThat(event.title()).isEqualTo("Some event");
-    assertThat(event.start()).hasToString("2001-01-01T00:00");
-    assertThat(event.end()).hasToString("2001-01-01T12:00");
+    assertThat(event.startTime()).hasToString("2001-01-01T00:00");
+    assertThat(event.endTime()).hasToString("2001-01-01T12:00");
   }
 
 }

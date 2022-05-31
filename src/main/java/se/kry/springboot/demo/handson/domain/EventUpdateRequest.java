@@ -8,11 +8,11 @@ import javax.validation.constraints.Size;
 
 public record EventUpdateRequest(
     Optional<@Size(max = SIZE_TITLE) String> title,
-    Optional<LocalDateTime> start,
-    Optional<LocalDateTime> end) {
+    Optional<LocalDateTime> startTime,
+    Optional<LocalDateTime> endTime) {
 
   public EventUpdateRequest {
-    start.ifPresent(s -> end.ifPresent(e -> {
+    startTime.ifPresent(s -> endTime.ifPresent(e -> {
       if (s.isAfter(e)) {
         throw new StartIsAfterEndException(s, e);
       }
