@@ -39,8 +39,8 @@ class EventRepositoryTest {
     event.as(StepVerifier::create).assertNext(actual -> {
       assertThat(actual.id()).isEqualTo(id);
       assertThat(actual.title()).isEqualTo("Some event");
-      assertThat(actual.start()).hasToString("2001-01-01T00:00");
-      assertThat(actual.end()).hasToString("2001-01-01T12:00");
+      assertThat(actual.startTime()).hasToString("2001-01-01T00:00");
+      assertThat(actual.endTime()).hasToString("2001-01-01T12:00");
     }).verifyComplete();
   }
 
@@ -73,8 +73,8 @@ class EventRepositoryTest {
           assertThat(event).isNotNull();
           assertThat(event.id()).isNotNull();
           assertThat(event.title()).isEqualTo("Some event");
-          assertThat(event.start()).hasToString("2001-01-01T00:00");
-          assertThat(event.end()).hasToString("2001-01-01T12:00");
+          assertThat(event.startTime()).hasToString("2001-01-01T00:00");
+          assertThat(event.endTime()).hasToString("2001-01-01T12:00");
         }).verifyComplete();
   }
 
