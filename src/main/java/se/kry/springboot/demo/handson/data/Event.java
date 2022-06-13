@@ -11,10 +11,10 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.domain.Persistable;
-import org.springframework.data.relational.core.mapping.Table;
+import org.springframework.data.neo4j.core.schema.Node;
 import se.kry.springboot.demo.handson.domain.EventConstants;
 
-@Table
+@Node
 public record Event(@Id UUID id,
                     @NotBlank @Size(max = EventConstants.SIZE_TITLE) String title,
                     @NotNull LocalDateTime startTime,

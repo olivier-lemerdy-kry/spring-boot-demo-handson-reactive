@@ -11,21 +11,37 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
+import org.springframework.boot.test.autoconfigure.data.neo4j.DataNeo4jTest;
 import org.springframework.dao.UncategorizedDataAccessException;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
+import org.springframework.data.neo4j.core.ReactiveNeo4jTemplate;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.Neo4jContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-@DataR2dbcTest
+@DataNeo4jTest
+@Testcontainers
 class EventRepositoryTest {
 
+  @Container
+  private static final Neo4jContainer<?> neo4j = new Neo4jContainer<>("neo4j:4.4");
+
   @Autowired
-  private R2dbcEntityTemplate template;
+  private ReactiveNeo4jTemplate template;
 
   @Autowired
   private EventRepository repository;
+
+  @DynamicPropertySource
+  static void mySqlProperties(DynamicPropertyRegistry registry) {
+    registry.add("spring.neo4j.uri", neo4j::getBoltUrl);
+    registry.add("spring.neo4j.authentication.username", () -> "neo4j");
+    registry.add("spring.neo4j.authentication.password", neo4j::getAdminPassword);
+  }
 
   @Test
   void get_event() {
@@ -33,7 +49,7 @@ class EventRepositoryTest {
     var start = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
     var end = start.plusHours(12);
 
-    template.insert(new Event(id, "Some event", start, end, Instant.EPOCH, Instant.EPOCH)).block();
+    template.save(new Event(id, "Some event", start, end, Instant.EPOCH, Instant.EPOCH)).block();
 
     var event = repository.findById(id);
 
@@ -51,7 +67,7 @@ class EventRepositoryTest {
 
     var inserts = IntStream.range(0, 50)
         .mapToObj(i -> Event.from("Event" + i, start.plusDays(i), start.plusDays(i).plusHours(12)))
-        .map(template::insert)
+        .map(template::save)
         .collect(Collectors.toList());
     Mono.when(inserts).block();
 
