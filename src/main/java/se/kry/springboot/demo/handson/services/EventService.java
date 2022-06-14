@@ -25,20 +25,23 @@ public class EventService {
 
   @Transactional
   public Mono<EventResponse> createEvent(@NotNull EventCreationRequest eventCreationRequest) {
-    return repository.save(newEventFromCreationRequest(eventCreationRequest))
-        .map(this::responseFromEvent);
+    return requireNonNull(eventCreationRequest).flatMap(p ->
+        repository.save(newEventFromCreationRequest(eventCreationRequest))
+            .map(this::responseFromEvent));
   }
 
   public Mono<Page<EventResponse>> getEvents(@NotNull Pageable pageable) {
-    return Mono.zip(
-        repository.count(),
-        repository.findBy(pageable).collectList(),
-        (count, list) -> new PageImpl<>(list, pageable, count).map(this::responseFromEvent));
+    return requireNonNull(pageable).flatMap(p ->
+        Mono.zip(
+            repository.count(),
+            repository.findBy(pageable).collectList(),
+            (count, list) -> new PageImpl<>(list, pageable, count).map(this::responseFromEvent)));
   }
 
   public Mono<EventResponse> getEvent(@NotNull UUID id) {
-    return repository.findById(id)
-        .map(this::responseFromEvent);
+    return requireNonNull(id).flatMap(p ->
+        repository.findById(id)
+            .map(this::responseFromEvent));
   }
 
   @Transactional
@@ -51,7 +54,8 @@ public class EventService {
 
   @Transactional
   public Mono<Void> deleteEvent(@NotNull UUID id) {
-    return repository.deleteById(id);
+    return requireNonNull(id).flatMap(p ->
+        repository.deleteById(id));
   }
 
   private Event newEventFromCreationRequest(@NotNull EventCreationRequest eventCreationRequest) {
@@ -71,5 +75,12 @@ public class EventService {
 
   private EventResponse responseFromEvent(Event event) {
     return new EventResponse(event.id(), event.title(), event.startTime(), event.endTime());
+  }
+
+  private <T> Mono<T> requireNonNull(T someObject) {
+    if (someObject == null) {
+      return Mono.error(NullPointerException::new);
+    }
+    return Mono.just(someObject);
   }
 }
