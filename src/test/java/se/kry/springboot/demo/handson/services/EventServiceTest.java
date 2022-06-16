@@ -12,8 +12,12 @@ import java.time.Month;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.IntStream;
+import org.assertj.core.data.Index;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.Pageable;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import se.kry.springboot.demo.handson.data.Event;
@@ -104,6 +108,49 @@ class EventServiceTest {
           assertThat(eventResponse.title()).isEqualTo(DEFAULT_TITLE);
           assertThat(eventResponse.startTime()).isEqualTo(DEFAULT_START_TIME);
           assertThat(eventResponse.endTime()).isEqualTo(DEFAULT_END_TIME);
+        })
+        .verifyComplete();
+  }
+
+  @Test
+  void get_events_with_null_pageable_fails() {
+    service.getEvents(null)
+        .as(StepVerifier::create)
+        .verifyError(NullPointerException.class);
+  }
+
+  @Test
+  void get_events() {
+    var pageable = Pageable.ofSize(5);
+    var baseTime = LocalDate.of(2001, Month.JANUARY, 1).atTime(12, 0);
+
+    when(repository.count()).thenReturn(Mono.just(99L));
+
+    when(repository.findBy(pageable)).thenAnswer(invocation -> {
+      var invokedPageable = invocation.getArgument(0, Pageable.class);
+      return Flux.fromStream(IntStream.range(0, invokedPageable.getPageSize()).mapToObj(i ->
+          Event.from("Event " + i, baseTime.plusDays(i), baseTime.plusDays(i).plusHours(i + 1))));
+    });
+
+    service.getEvents(pageable)
+        .as(StepVerifier::create)
+        .assertNext(page -> {
+          assertThat(page.getTotalElements()).isEqualTo(99L);
+          assertThat(page.getTotalPages()).isEqualTo(20);
+          assertThat(page.getNumber()).isZero();
+
+          assertThat(page.getContent())
+              .hasSize(5)
+              .satisfies(eventResponse -> {
+                assertThat(eventResponse.title()).isEqualTo("Event 0");
+                assertThat(eventResponse.startTime()).isEqualTo(LocalDate.of(2001, Month.JANUARY, 1).atTime(12, 0));
+                assertThat(eventResponse.endTime()).isEqualTo(LocalDate.of(2001, Month.JANUARY, 1).atTime(13, 0));
+              }, Index.atIndex(0))
+              .satisfies(eventResponse -> {
+                assertThat(eventResponse.title()).isEqualTo("Event 4");
+                assertThat(eventResponse.startTime()).isEqualTo(LocalDate.of(2001, Month.JANUARY, 5).atTime(12, 0));
+                assertThat(eventResponse.endTime()).isEqualTo(LocalDate.of(2001, Month.JANUARY, 5).atTime(17, 0));
+              }, Index.atIndex(4));
         })
         .verifyComplete();
   }
