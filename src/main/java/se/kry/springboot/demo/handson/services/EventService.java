@@ -1,5 +1,7 @@
 package se.kry.springboot.demo.handson.services;
 
+import static se.kry.springboot.demo.handson.util.ReactivePreconditions.requireNonNull;
+
 import java.util.UUID;
 import javax.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
@@ -46,10 +48,11 @@ public class EventService {
 
   @Transactional
   public Mono<EventResponse> updateEvent(@NotNull UUID id, @NotNull EventUpdateRequest eventUpdateRequest) {
-    return repository.findById(id)
-        .map(event -> updateEventFromUpdateRequest(event, eventUpdateRequest))
-        .flatMap(repository::save)
-        .map(this::responseFromEvent);
+    return requireNonNull(id, eventUpdateRequest).flatMap(p ->
+        repository.findById(id)
+            .map(event -> updateEventFromUpdateRequest(event, eventUpdateRequest))
+            .flatMap(repository::save)
+            .map(this::responseFromEvent));
   }
 
   @Transactional
@@ -75,12 +78,5 @@ public class EventService {
 
   private EventResponse responseFromEvent(Event event) {
     return new EventResponse(event.id(), event.title(), event.startTime(), event.endTime());
-  }
-
-  private <T> Mono<T> requireNonNull(T someObject) {
-    if (someObject == null) {
-      return Mono.error(NullPointerException::new);
-    }
-    return Mono.just(someObject);
   }
 }
