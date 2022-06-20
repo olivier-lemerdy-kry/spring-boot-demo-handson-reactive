@@ -27,10 +27,19 @@ import se.kry.springboot.demo.handson.domain.EventUpdateRequest;
 
 class EventServiceTest {
 
-  public static final UUID DEFAULT_ID = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
-  private static final String DEFAULT_TITLE = "My Event";
-  private static final LocalDateTime DEFAULT_START_TIME = LocalDate.of(2001, Month.JANUARY, 1).atTime(12, 0);
-  public static final LocalDateTime DEFAULT_END_TIME = DEFAULT_START_TIME.plusHours(1);
+  interface Defaults {
+    UUID ID = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
+
+    String TITLE = "My Event";
+
+    LocalDateTime START_TIME = LocalDate.of(2001, Month.JANUARY, 1).atTime(12, 0);
+
+    LocalDateTime END_TIME = START_TIME.plusHours(1);
+
+    Instant CREATED_DATE = Instant.EPOCH;
+
+    Instant LAST_MODIFIED_DATE = Instant.EPOCH;
+  }
 
   private EventService service;
 
@@ -51,7 +60,7 @@ class EventServiceTest {
 
   @Test
   void create_event() {
-    var creationRequest = new EventCreationRequest(DEFAULT_TITLE, DEFAULT_START_TIME, DEFAULT_END_TIME);
+    var creationRequest = new EventCreationRequest(Defaults.TITLE, Defaults.START_TIME, Defaults.END_TIME);
 
     var idReference = new AtomicReference<UUID>();
     when(repository.save(any())).thenAnswer(invocation -> {
@@ -62,21 +71,17 @@ class EventServiceTest {
       idReference.set(inputEvent.id());
       return Mono.just(
           new Event(
-              inputEvent.id(),
-              inputEvent.title(),
-              inputEvent.startTime(),
-              inputEvent.endTime(),
-              Instant.EPOCH,
-              Instant.EPOCH));
+              inputEvent.id(), inputEvent.title(), inputEvent.startTime(), inputEvent.endTime(),
+              Defaults.CREATED_DATE, Defaults.LAST_MODIFIED_DATE));
     });
 
     service.createEvent(creationRequest)
         .as(StepVerifier::create)
         .assertNext(eventResponse -> {
           assertThat(eventResponse.id()).isEqualTo(idReference.get());
-          assertThat(eventResponse.title()).isEqualTo(DEFAULT_TITLE);
-          assertThat(eventResponse.startTime()).isEqualTo(DEFAULT_START_TIME);
-          assertThat(eventResponse.endTime()).isEqualTo(DEFAULT_END_TIME);
+          assertThat(eventResponse.title()).isEqualTo(Defaults.TITLE);
+          assertThat(eventResponse.startTime()).isEqualTo(Defaults.START_TIME);
+          assertThat(eventResponse.endTime()).isEqualTo(Defaults.END_TIME);
         }).verifyComplete();
   }
 
@@ -89,25 +94,27 @@ class EventServiceTest {
 
   @Test
   void get_event_not_found() {
-    when(repository.findById(DEFAULT_ID)).thenReturn(Mono.empty());
+    when(repository.findById(Defaults.ID)).thenReturn(Mono.empty());
 
-    service.getEvent(DEFAULT_ID)
+    service.getEvent(Defaults.ID)
         .as(StepVerifier::create)
         .verifyComplete();
   }
 
   @Test
   void get_event() {
-    when(repository.findById(DEFAULT_ID)).thenReturn(
-        Mono.just(new Event(DEFAULT_ID, DEFAULT_TITLE, DEFAULT_START_TIME, DEFAULT_END_TIME, Instant.EPOCH, Instant.EPOCH)));
+    when(repository.findById(Defaults.ID))
+        .thenReturn(Mono.just(
+            new Event(Defaults.ID, Defaults.TITLE, Defaults.START_TIME, Defaults.END_TIME, Defaults.CREATED_DATE,
+                Defaults.LAST_MODIFIED_DATE)));
 
-    service.getEvent(DEFAULT_ID)
+    service.getEvent(Defaults.ID)
         .as(StepVerifier::create)
         .assertNext(eventResponse -> {
-          assertThat(eventResponse.id()).isEqualTo(DEFAULT_ID);
-          assertThat(eventResponse.title()).isEqualTo(DEFAULT_TITLE);
-          assertThat(eventResponse.startTime()).isEqualTo(DEFAULT_START_TIME);
-          assertThat(eventResponse.endTime()).isEqualTo(DEFAULT_END_TIME);
+          assertThat(eventResponse.id()).isEqualTo(Defaults.ID);
+          assertThat(eventResponse.title()).isEqualTo(Defaults.TITLE);
+          assertThat(eventResponse.startTime()).isEqualTo(Defaults.START_TIME);
+          assertThat(eventResponse.endTime()).isEqualTo(Defaults.END_TIME);
         })
         .verifyComplete();
   }
@@ -157,8 +164,10 @@ class EventServiceTest {
 
   @Test
   void update_event_with_null_id_fails() {
-    var request =
-        new EventUpdateRequest(Optional.of(DEFAULT_TITLE), Optional.of(DEFAULT_START_TIME), Optional.of(DEFAULT_END_TIME));
+    var request = new EventUpdateRequest(
+        Optional.of(Defaults.TITLE),
+        Optional.of(Defaults.START_TIME),
+        Optional.of(Defaults.END_TIME));
 
     service.updateEvent(null, request)
         .as(StepVerifier::create)
@@ -167,19 +176,21 @@ class EventServiceTest {
 
   @Test
   void update_event_with_null_update_request_fails() {
-    service.updateEvent(DEFAULT_ID, null)
+    service.updateEvent(Defaults.ID, null)
         .as(StepVerifier::create)
         .verifyError(NullPointerException.class);
   }
 
   @Test
   void update_event_not_found() {
-    var request =
-        new EventUpdateRequest(Optional.of(DEFAULT_TITLE), Optional.of(DEFAULT_START_TIME), Optional.of(DEFAULT_END_TIME));
+    var request = new EventUpdateRequest(
+        Optional.of(Defaults.TITLE),
+        Optional.of(Defaults.START_TIME),
+        Optional.of(Defaults.END_TIME));
 
-    when(repository.findById(DEFAULT_ID)).thenReturn(Mono.empty());
+    when(repository.findById(Defaults.ID)).thenReturn(Mono.empty());
 
-    service.updateEvent(DEFAULT_ID, request)
+    service.updateEvent(Defaults.ID, request)
         .as(StepVerifier::create)
         .verifyComplete();
   }
@@ -192,16 +203,18 @@ class EventServiceTest {
     var request =
         new EventUpdateRequest(Optional.of("Another title"), Optional.of(anotherStartTime), Optional.of(anotherEndTime));
 
-    when(repository.findById(DEFAULT_ID)).thenReturn(
-        Mono.just(new Event(DEFAULT_ID, DEFAULT_TITLE, DEFAULT_START_TIME, DEFAULT_END_TIME, Instant.EPOCH, Instant.EPOCH)));
+    when(repository.findById(Defaults.ID)).thenReturn(
+        Mono.just(
+            new Event(Defaults.ID, Defaults.TITLE, Defaults.START_TIME, Defaults.END_TIME, Defaults.CREATED_DATE,
+                Defaults.LAST_MODIFIED_DATE)));
 
     when(repository.save(any())).thenAnswer(invocation ->
         Mono.just(invocation.getArgument(0, Event.class)));
 
-    service.updateEvent(DEFAULT_ID, request)
+    service.updateEvent(Defaults.ID, request)
         .as(StepVerifier::create)
         .assertNext(eventResponse -> {
-          assertThat(eventResponse.id()).isEqualTo(DEFAULT_ID);
+          assertThat(eventResponse.id()).isEqualTo(Defaults.ID);
           assertThat(eventResponse.title()).isEqualTo("Another title");
           assertThat(eventResponse.startTime()).isEqualTo(anotherStartTime);
           assertThat(eventResponse.endTime()).isEqualTo(anotherEndTime);
@@ -218,9 +231,9 @@ class EventServiceTest {
 
   @Test
   void delete_event() {
-    when(repository.deleteById(DEFAULT_ID)).thenReturn(Mono.empty());
+    when(repository.deleteById(Defaults.ID)).thenReturn(Mono.empty());
 
-    service.deleteEvent(DEFAULT_ID)
+    service.deleteEvent(Defaults.ID)
         .as(StepVerifier::create)
         .verifyComplete();
   }
