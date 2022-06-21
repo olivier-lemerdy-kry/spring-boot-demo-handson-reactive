@@ -1,4 +1,4 @@
-package se.kry.springboot.demo.handson.rest;
+package se.kry.springboot.demo.handson.web;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;

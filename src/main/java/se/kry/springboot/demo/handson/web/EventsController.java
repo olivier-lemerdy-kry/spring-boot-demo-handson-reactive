@@ -1,4 +1,4 @@
-package se.kry.springboot.demo.handson.rest;
+package se.kry.springboot.demo.handson.web;
 
 import java.util.UUID;
 import javax.validation.Valid;
