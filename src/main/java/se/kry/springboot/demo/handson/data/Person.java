@@ -13,11 +13,11 @@ import se.kry.springboot.demo.handson.domain.PersonConstants;
 
 @Table
 public record Person(@Id UUID id,
-                     @NotBlank @Size(max = PersonConstants.SIZE_NAME) String name,
+                     @NotBlank @Size(max = PersonConstants.Sizes.NAME) String name,
                      @CreatedDate Instant createdDate,
                      @LastModifiedDate Instant lastModifiedDate) implements Persistable<UUID> {
 
-  public static Person from(@NotBlank @Size(max = PersonConstants.SIZE_NAME) String name) {
+  public static Person from(@NotBlank @Size(max = PersonConstants.Sizes.NAME) String name) {
     return new Person(UUID.randomUUID(), name, null, null);
   }
 

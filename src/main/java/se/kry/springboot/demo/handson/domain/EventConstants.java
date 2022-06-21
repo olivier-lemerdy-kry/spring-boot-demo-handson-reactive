@@ -1,5 +1,7 @@
 package se.kry.springboot.demo.handson.domain;
 
 public interface EventConstants {
-  int SIZE_TITLE = 256;
+  interface Sizes {
+    int TITLE = 256;
+  }
 }
