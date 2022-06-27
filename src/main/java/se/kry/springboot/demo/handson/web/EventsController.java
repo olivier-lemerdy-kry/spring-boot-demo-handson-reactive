@@ -14,10 +14,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import se.kry.springboot.demo.handson.domain.EventCreationRequest;
 import se.kry.springboot.demo.handson.domain.EventResponse;
 import se.kry.springboot.demo.handson.domain.EventUpdateRequest;
+import se.kry.springboot.demo.handson.domain.PersonResponse;
 import se.kry.springboot.demo.handson.services.EventService;
 
 @RestController
@@ -49,6 +51,11 @@ public class EventsController {
     return service.getEvent(id)
         .map(ResponseEntity::ok)
         .defaultIfEmpty(ResponseEntity.notFound().build());
+  }
+
+  @GetMapping("{id}/participants")
+  Flux<PersonResponse> readEventParticipants(@PathVariable UUID id) {
+    return service.getEventParticipants(id);
   }
 
   @PatchMapping("{id}")

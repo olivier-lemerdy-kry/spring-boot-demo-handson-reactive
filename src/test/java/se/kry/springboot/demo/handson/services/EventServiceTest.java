@@ -22,6 +22,8 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import se.kry.springboot.demo.handson.data.Event;
 import se.kry.springboot.demo.handson.data.EventRepository;
+import se.kry.springboot.demo.handson.data.ParticipantRepository;
+import se.kry.springboot.demo.handson.data.PersonRepository;
 import se.kry.springboot.demo.handson.domain.EventCreationRequest;
 import se.kry.springboot.demo.handson.domain.EventUpdateRequest;
 
@@ -43,12 +45,18 @@ class EventServiceTest {
 
   private EventService service;
 
-  private EventRepository repository;
+  private EventRepository eventRepository;
+
+  private ParticipantRepository participantRepository;
+
+  private PersonRepository personRepository;
 
   @BeforeEach
   void setup() {
-    repository = mock(EventRepository.class);
-    service = new EventService(repository);
+    eventRepository = mock(EventRepository.class);
+    participantRepository = mock(ParticipantRepository.class);
+    personRepository = mock(PersonRepository.class);
+    service = new EventService(eventRepository, participantRepository, personRepository);
   }
 
   @Test
@@ -63,7 +71,7 @@ class EventServiceTest {
     var creationRequest = new EventCreationRequest(Defaults.TITLE, Defaults.START_TIME, Defaults.END_TIME);
 
     var idReference = new AtomicReference<UUID>();
-    when(repository.save(any())).thenAnswer(invocation -> {
+    when(eventRepository.save(any())).thenAnswer(invocation -> {
       var inputEvent = invocation.getArgument(0, Event.class);
       assertThat(inputEvent.id()).isNotNull();
       assertThat(inputEvent.createdDate()).isNull();
@@ -94,7 +102,7 @@ class EventServiceTest {
 
   @Test
   void get_event_not_found() {
-    when(repository.findById(Defaults.ID)).thenReturn(Mono.empty());
+    when(eventRepository.findById(Defaults.ID)).thenReturn(Mono.empty());
 
     service.getEvent(Defaults.ID)
         .as(StepVerifier::create)
@@ -103,7 +111,7 @@ class EventServiceTest {
 
   @Test
   void get_event() {
-    when(repository.findById(Defaults.ID))
+    when(eventRepository.findById(Defaults.ID))
         .thenReturn(Mono.just(
             new Event(Defaults.ID, Defaults.TITLE, Defaults.START_TIME, Defaults.END_TIME, Defaults.CREATED_DATE,
                 Defaults.LAST_MODIFIED_DATE)));
@@ -131,9 +139,9 @@ class EventServiceTest {
     var pageable = Pageable.ofSize(5);
     var baseTime = LocalDate.of(2001, Month.JANUARY, 1).atTime(12, 0);
 
-    when(repository.count()).thenReturn(Mono.just(99L));
+    when(eventRepository.count()).thenReturn(Mono.just(99L));
 
-    when(repository.findBy(pageable)).thenAnswer(invocation -> {
+    when(eventRepository.findBy(pageable)).thenAnswer(invocation -> {
       var invokedPageable = invocation.getArgument(0, Pageable.class);
       return Flux.fromStream(IntStream.range(0, invokedPageable.getPageSize()).mapToObj(i ->
           Event.from("Event " + i, baseTime.plusDays(i), baseTime.plusDays(i).plusHours(i + 1))));
@@ -188,7 +196,7 @@ class EventServiceTest {
         Optional.of(Defaults.START_TIME),
         Optional.of(Defaults.END_TIME));
 
-    when(repository.findById(Defaults.ID)).thenReturn(Mono.empty());
+    when(eventRepository.findById(Defaults.ID)).thenReturn(Mono.empty());
 
     service.updateEvent(Defaults.ID, request)
         .as(StepVerifier::create)
@@ -203,12 +211,12 @@ class EventServiceTest {
     var request =
         new EventUpdateRequest(Optional.of("Some other event"), Optional.of(anotherStartTime), Optional.of(anotherEndTime));
 
-    when(repository.findById(Defaults.ID)).thenReturn(
+    when(eventRepository.findById(Defaults.ID)).thenReturn(
         Mono.just(
             new Event(Defaults.ID, Defaults.TITLE, Defaults.START_TIME, Defaults.END_TIME, Defaults.CREATED_DATE,
                 Defaults.LAST_MODIFIED_DATE)));
 
-    when(repository.save(any())).thenAnswer(invocation ->
+    when(eventRepository.save(any())).thenAnswer(invocation ->
         Mono.just(invocation.getArgument(0, Event.class)));
 
     service.updateEvent(Defaults.ID, request)
@@ -231,7 +239,7 @@ class EventServiceTest {
 
   @Test
   void delete_event() {
-    when(repository.deleteById(Defaults.ID)).thenReturn(Mono.empty());
+    when(eventRepository.deleteById(Defaults.ID)).thenReturn(Mono.empty());
 
     service.deleteEvent(Defaults.ID)
         .as(StepVerifier::create)
