@@ -30,7 +30,7 @@ class EventServiceTest {
   interface Defaults {
     UUID ID = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
 
-    String TITLE = "My Event";
+    String TITLE = "Some event";
 
     LocalDateTime START_TIME = LocalDate.of(2001, Month.JANUARY, 1).atTime(12, 0);
 
@@ -201,7 +201,7 @@ class EventServiceTest {
     var anotherEndTime = anotherStartTime.plusHours(2);
 
     var request =
-        new EventUpdateRequest(Optional.of("Another title"), Optional.of(anotherStartTime), Optional.of(anotherEndTime));
+        new EventUpdateRequest(Optional.of("Some other event"), Optional.of(anotherStartTime), Optional.of(anotherEndTime));
 
     when(repository.findById(Defaults.ID)).thenReturn(
         Mono.just(
@@ -215,7 +215,7 @@ class EventServiceTest {
         .as(StepVerifier::create)
         .assertNext(eventResponse -> {
           assertThat(eventResponse.id()).isEqualTo(Defaults.ID);
-          assertThat(eventResponse.title()).isEqualTo("Another title");
+          assertThat(eventResponse.title()).isEqualTo("Some other event");
           assertThat(eventResponse.startTime()).isEqualTo(anotherStartTime);
           assertThat(eventResponse.endTime()).isEqualTo(anotherEndTime);
         })

@@ -1,7 +1,9 @@
 package se.kry.springboot.demo.handson.data;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.function.UnaryOperator;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import org.springframework.data.annotation.CreatedDate;
@@ -29,5 +31,9 @@ public record Person(@Id UUID id,
   @Override
   public boolean isNew() {
     return createdDate == null;
+  }
+
+  public Person copy(UnaryOperator<String> nameFunction) {
+    return new Person(id, nameFunction.apply(name), createdDate, lastModifiedDate);
   }
 }

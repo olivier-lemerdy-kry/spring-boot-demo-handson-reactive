@@ -27,6 +27,15 @@ import se.kry.springboot.demo.handson.services.EventService;
 @WebFluxTest(EventsController.class)
 class EventsControllerTest {
 
+  interface Defaults {
+
+    String ID_STRING = "38a14a82-d5a2-4210-9d61-cc3577bfa5df";
+
+    UUID ID = UUID.fromString(ID_STRING);
+
+    String NAME = "Some event";
+  }
+
   @Autowired
   private WebTestClient webTestClient;
 
@@ -38,15 +47,14 @@ class EventsControllerTest {
 
   @Test
   void create_event() {
-    var id = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
     var startTime = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
     var endTime = startTime.plusHours(12);
 
     when(service.createEvent(any())).thenReturn(
-        Mono.just(new EventResponse(id, "Some event", startTime, endTime)));
+        Mono.just(new EventResponse(Defaults.ID, Defaults.NAME, startTime, endTime)));
 
     var payload = objectMapper.createObjectNode()
-        .put("title", "Some event")
+        .put("title", Defaults.NAME)
         .put("startTime", "2001-01-01T00:00:00")
         .put("endTime", "2001-01-01T12:00:00")
         .toString();
@@ -56,10 +64,10 @@ class EventsControllerTest {
         .bodyValue(payload)
         .exchange()
         .expectStatus().isCreated()
-        .expectHeader().valueEquals("Location", "/api/v1/events/38a14a82-d5a2-4210-9d61-cc3577bfa5df")
+        .expectHeader().valueEquals("Location", "/api/v1/events/" + Defaults.ID)
         .expectBody()
-        .jsonPath("$.id").isEqualTo("38a14a82-d5a2-4210-9d61-cc3577bfa5df")
-        .jsonPath("$.title").isEqualTo("Some event")
+        .jsonPath("$.id").isEqualTo(Defaults.ID_STRING)
+        .jsonPath("$.title").isEqualTo(Defaults.NAME)
         .jsonPath("$.startTime").isEqualTo("2001-01-01T00:00:00")
         .jsonPath("$.endTime").isEqualTo("2001-01-01T12:00:00");
   }
@@ -97,7 +105,7 @@ class EventsControllerTest {
   @Test
   void create_event_with_null_start() {
     var payload = objectMapper.createObjectNode()
-        .put("title", "Some event")
+        .put("title", Defaults.NAME)
         .put("endTime", "2001-01-01T00:00:00")
         .toString();
 
@@ -111,7 +119,7 @@ class EventsControllerTest {
   @Test
   void create_event_with_null_end() {
     var payload = objectMapper.createObjectNode()
-        .put("title", "Some event")
+        .put("title", Defaults.NAME)
         .put("startTime", "2001-01-01T00:00:00")
         .toString();
 
@@ -125,7 +133,7 @@ class EventsControllerTest {
   @Test
   void create_event_with_start_after_end() {
     var payload = objectMapper.createObjectNode()
-        .put("title", "Some event")
+        .put("title", Defaults.NAME)
         .put("startTime", "2001-01-01T12:00:00")
         .put("endTime", "2001-01-01T00:00:00")
         .toString();
@@ -139,7 +147,6 @@ class EventsControllerTest {
 
   @Test
   void read_events() {
-    var uuid1 = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
     var start1 = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
     var end1 = start1.plusHours(12);
 
@@ -148,7 +155,7 @@ class EventsControllerTest {
     var end2 = end1.plusHours(1);
 
     var content = List.of(
-        new EventResponse(uuid1, "Some event", start1, end1),
+        new EventResponse(Defaults.ID, Defaults.NAME, start1, end1),
         new EventResponse(uuid2, "Some other event", start2, end2)
     );
 
@@ -163,8 +170,8 @@ class EventsControllerTest {
         .expectBody()
         .jsonPath("$").isMap()
         .jsonPath("$.content").isArray()
-        .jsonPath("$.content[0].id").isEqualTo("38a14a82-d5a2-4210-9d61-cc3577bfa5df")
-        .jsonPath("$.content[0].title").isEqualTo("Some event")
+        .jsonPath("$.content[0].id").isEqualTo(Defaults.ID_STRING)
+        .jsonPath("$.content[0].title").isEqualTo(Defaults.NAME)
         .jsonPath("$.content[0].startTime").isEqualTo("2001-01-01T00:00:00")
         .jsonPath("$.content[0].endTime").isEqualTo("2001-01-01T12:00:00")
         .jsonPath("$.content[1].id").isEqualTo("8ebea9a7-e0ef-4a62-a729-aff26134f9d8")
@@ -197,48 +204,44 @@ class EventsControllerTest {
 
   @Test
   void read_event() {
-    var id = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
     var start = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
     var end = start.plusHours(12);
 
-    when(service.getEvent(id)).thenReturn(
-        Mono.just(new EventResponse(id, "Some event", start, end)));
+    when(service.getEvent(Defaults.ID)).thenReturn(
+        Mono.just(new EventResponse(Defaults.ID, Defaults.NAME, start, end)));
 
-    webTestClient.get().uri("/api/v1/events/{id}", id)
+    webTestClient.get().uri("/api/v1/events/{id}", Defaults.ID)
         .exchange()
         .expectStatus().isOk()
         .expectBody()
-        .jsonPath("$.title").isEqualTo("Some event")
+        .jsonPath("$.title").isEqualTo(Defaults.NAME)
         .jsonPath("$.startTime").isEqualTo("2001-01-01T00:00:00")
         .jsonPath("$.endTime").isEqualTo("2001-01-01T12:00:00");
   }
 
   @Test
   void read_event_with_unknown_id() {
-    var id = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
+    when(service.getEvent(Defaults.ID)).thenReturn(Mono.empty());
 
-    when(service.getEvent(id)).thenReturn(Mono.empty());
-
-    webTestClient.get().uri("/api/v1/events/{id}", id)
+    webTestClient.get().uri("/api/v1/events/{id}", Defaults.ID)
         .exchange()
         .expectStatus().isNotFound();
   }
 
   @Test
   void update_event() {
-    var uuid = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
     var start = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
     var end = start.plusHours(12);
 
-    when(service.updateEvent(uuid,
+    when(service.updateEvent(Defaults.ID,
         new EventUpdateRequest(Optional.of("Some other event"), Optional.empty(), Optional.empty())))
-        .thenReturn(Mono.just(new EventResponse(uuid, "Some other event", start, end)));
+        .thenReturn(Mono.just(new EventResponse(Defaults.ID, "Some other event", start, end)));
 
     var payload = objectMapper.createObjectNode()
         .put("title", "Some other event")
         .toString();
 
-    webTestClient.patch().uri("/api/v1/events/{id}", uuid)
+    webTestClient.patch().uri("/api/v1/events/{id}", Defaults.ID)
         .contentType(MediaType.APPLICATION_JSON)
         .bodyValue(payload)
         .exchange()
@@ -260,16 +263,14 @@ class EventsControllerTest {
 
   @Test
   void update_event_with_unknown_id() {
-    var uuid = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
-
-    when(service.updateEvent(eq(uuid), any()))
+    when(service.updateEvent(eq(Defaults.ID), any()))
         .thenReturn(Mono.empty());
 
     var payload = objectMapper.createObjectNode()
         .put("title", "Some other event")
         .toString();
 
-    webTestClient.patch().uri("/api/v1/events/{id}", uuid)
+    webTestClient.patch().uri("/api/v1/events/{id}", Defaults.ID)
         .contentType(MediaType.APPLICATION_JSON)
         .bodyValue(payload)
         .exchange()
@@ -278,13 +279,11 @@ class EventsControllerTest {
 
   @Test
   void update_event_with_too_long_title() {
-    var uuid = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
-
     var payload = objectMapper.createObjectNode()
         .put("title", "X".repeat(300))
         .toString();
 
-    webTestClient.patch().uri("/api/v1/events/{id}", uuid)
+    webTestClient.patch().uri("/api/v1/events/{id}", Defaults.ID)
         .contentType(MediaType.APPLICATION_JSON)
         .bodyValue(payload)
         .exchange()
@@ -293,14 +292,12 @@ class EventsControllerTest {
 
   @Test
   void update_event_with_start_after_end() {
-    var uuid = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
-
     var payload = objectMapper.createObjectNode()
         .put("startTime", "2001-01-01T12:00:00")
         .put("endTime", "2001-01-01T00:00:00")
         .toString();
 
-    webTestClient.patch().uri("/api/v1/events/{id}", uuid)
+    webTestClient.patch().uri("/api/v1/events/{id}", Defaults.ID)
         .contentType(MediaType.APPLICATION_JSON)
         .bodyValue(payload)
         .exchange()
@@ -309,9 +306,9 @@ class EventsControllerTest {
 
   @Test
   void delete_event() {
-    var uuid = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
+    when(service.deleteEvent(Defaults.ID)).thenReturn(Mono.empty());
 
-    webTestClient.delete().uri("/api/v1/events/{id}", uuid)
+    webTestClient.delete().uri("/api/v1/events/{id}", Defaults.ID)
         .exchange()
         .expectStatus().isOk();
   }

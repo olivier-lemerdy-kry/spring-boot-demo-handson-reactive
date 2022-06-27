@@ -41,9 +41,9 @@ public class EventService {
   }
 
   public Mono<EventResponse> getEvent(@NotNull UUID id) {
-    return requireNonNull(id).flatMap(p ->
-        repository.findById(id)
-            .map(this::responseFromEvent));
+    return requireNonNull(id)
+        .flatMap(p -> repository.findById(id))
+        .map(this::responseFromEvent);
   }
 
   @Transactional
