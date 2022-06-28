@@ -249,7 +249,11 @@ class ApplicationTest {
         .contentType(MediaType.APPLICATION_JSON)
         .bodyValue(payload)
         .exchange()
-        .expectStatus().isOk();
+        .expectStatus().isOk()
+        .expectBody()
+        .jsonPath("$").isArray()
+        .jsonPath("$[0].id").isEqualTo(personId.toString())
+        .jsonPath("$[0].name").isEqualTo("Jane Doe");
 
     logger.info("Ending step9: update event participants");
   }
@@ -259,7 +263,11 @@ class ApplicationTest {
 
     webTestClient.get().uri("/api/v1/events/{id}/participants", eventId)
         .exchange()
-        .expectStatus().isOk();
+        .expectStatus().isOk()
+        .expectBody()
+        .jsonPath("$").isArray()
+        .jsonPath("$[0].id").isNotEmpty()
+        .jsonPath("$[0].name").isEqualTo("Jane Doe");
 
     logger.info("Ending step10: read event participants");
   }
@@ -277,7 +285,10 @@ class ApplicationTest {
         .contentType(MediaType.APPLICATION_JSON)
         .bodyValue(payload)
         .exchange()
-        .expectStatus().isOk();
+        .expectStatus().isOk()
+        .expectBody()
+        .jsonPath("$").isArray()
+        .jsonPath("$").isEmpty();
 
     logger.info("Ending step11: update event participants to empty");
   }
