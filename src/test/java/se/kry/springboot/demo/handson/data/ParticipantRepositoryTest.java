@@ -10,20 +10,23 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
-import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @DataR2dbcTest
 class ParticipantRepositoryTest {
 
   interface Defaults {
-    String PERSON_NAME = "Some person";
+    interface Person {
+      String NAME = "Some person";
+    }
 
-    String EVENT_TITLE = "Some event";
+    interface Event {
+      String TITLE = "Some event";
 
-    LocalDateTime EVENT_START = LocalDate.of(2001, Month.JANUARY, 1).atTime(12, 0);
+      LocalDateTime START = LocalDate.of(2001, Month.JANUARY, 1).atTime(12, 0);
 
-    LocalDateTime EVENT_END = EVENT_START.plusHours(1);
+      LocalDateTime END = START.plusHours(1);
+    }
   }
 
   @Autowired
@@ -35,10 +38,9 @@ class ParticipantRepositoryTest {
   @Test
   void find_by_event_id() {
     var timeout = Duration.ofSeconds(2);
-
-    var event = template.insert(Event.from(Defaults.EVENT_TITLE, Defaults.EVENT_START, Defaults.EVENT_END))
+    var event = template.insert(Event.from(Defaults.Event.TITLE, Defaults.Event.START, Defaults.Event.END))
         .block(timeout);
-    var person = template.insert(Person.from(Defaults.PERSON_NAME))
+    var person = template.insert(Person.from(Defaults.Person.NAME))
         .block(timeout);
     template.insert(Participant.from(event.id(), person.id()))
         .block(timeout);

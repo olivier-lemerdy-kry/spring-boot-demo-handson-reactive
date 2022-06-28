@@ -1,7 +1,6 @@
 package se.kry.springboot.demo.handson.data;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 import javax.validation.constraints.NotBlank;
