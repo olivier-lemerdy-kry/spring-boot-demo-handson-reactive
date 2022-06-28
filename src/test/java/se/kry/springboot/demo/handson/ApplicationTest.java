@@ -217,7 +217,7 @@ class ApplicationTest {
         .exchange()
         .expectStatus().isOk()
         .expectBody()
-        .jsonPath("$.title").isEqualTo("Jane Doe");
+        .jsonPath("$.name").isEqualTo("Jane Doe");
 
     logger.info("Ending step7: update person");
   }
@@ -231,7 +231,7 @@ class ApplicationTest {
         .exchange()
         .expectStatus().isOk()
         .expectBody()
-        .jsonPath("$.title").isEqualTo("Jane Doe");
+        .jsonPath("$.name").isEqualTo("Jane Doe");
 
     logger.info("Ending step8: read person");
   }
