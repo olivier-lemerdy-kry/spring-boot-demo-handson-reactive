@@ -17,7 +17,7 @@ class ParticipantRepositoryTest {
 
   interface Defaults {
     interface Person {
-      String NAME = "Some person";
+      String NAME = "John Doe";
     }
 
     interface Event {

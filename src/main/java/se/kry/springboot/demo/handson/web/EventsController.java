@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,6 +18,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import se.kry.springboot.demo.handson.domain.EventCreationRequest;
+import se.kry.springboot.demo.handson.domain.EventParticipantsUpdateRequest;
 import se.kry.springboot.demo.handson.domain.EventResponse;
 import se.kry.springboot.demo.handson.domain.EventUpdateRequest;
 import se.kry.springboot.demo.handson.domain.PersonResponse;
@@ -56,6 +58,11 @@ public class EventsController {
   @GetMapping("{id}/participants")
   Flux<PersonResponse> readEventParticipants(@PathVariable UUID id) {
     return service.getEventParticipants(id);
+  }
+
+  @PutMapping("{id}/participants")
+  Flux<PersonResponse> updateEventParticipants(@PathVariable UUID id, EventParticipantsUpdateRequest request) {
+    return service.updateEventParticipants(id, request);
   }
 
   @PatchMapping("{id}")

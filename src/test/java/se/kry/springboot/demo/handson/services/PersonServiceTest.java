@@ -1,5 +1,6 @@
 package se.kry.springboot.demo.handson.services;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -20,7 +21,7 @@ class PersonServiceTest {
   interface Defaults {
     UUID ID = UUID.fromString("e1c47fc3-472d-4c14-8d7a-c1b4d1dbdfe5");
 
-    String NAME = "Some name";
+    String NAME = "John Doe";
 
     Instant CREATED_DATE = Instant.EPOCH;
 
@@ -39,7 +40,7 @@ class PersonServiceTest {
 
   @Test
   void update_person_with_null_id_fails() {
-    var request = new PersonUpdateRequest(Optional.of("Some other name"));
+    var request = new PersonUpdateRequest(Optional.of("Jane Doe"));
 
     service.updatePerson(null, request)
         .as(StepVerifier::create)
@@ -55,7 +56,7 @@ class PersonServiceTest {
 
   @Test
   void update_person() {
-    var request = new PersonUpdateRequest(Optional.of("Some other name"));
+    var request = new PersonUpdateRequest(Optional.of("Jane Doe"));
 
     when(repository.findById(Defaults.ID)).thenReturn(
         Mono.just(new Person(Defaults.ID, Defaults.NAME, Defaults.CREATED_DATE, Defaults.LAST_MODIFIED_DATE)));
@@ -66,7 +67,8 @@ class PersonServiceTest {
     service.updatePerson(Defaults.ID, request)
         .as(StepVerifier::create)
         .assertNext(personResponse -> {
-
+          assertThat(personResponse.id()).isEqualTo(Defaults.ID);
+          assertThat(personResponse.name()).isEqualTo("Jane Doe");
         })
         .verifyComplete();
   }
