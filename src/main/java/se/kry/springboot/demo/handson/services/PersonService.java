@@ -1,5 +1,6 @@
 package se.kry.springboot.demo.handson.services;
 
+import static se.kry.springboot.demo.handson.services.PersonFunctions.newPersonFromCreationRequest;
 import static se.kry.springboot.demo.handson.services.PersonFunctions.updatePersonFromUpdateRequest;
 import static se.kry.springboot.demo.handson.util.MonoPreconditions.requireNonNull;
 
@@ -9,8 +10,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 import se.kry.springboot.demo.handson.data.PersonRepository;
+import se.kry.springboot.demo.handson.domain.PersonCreationRequest;
 import se.kry.springboot.demo.handson.domain.PersonResponse;
 import se.kry.springboot.demo.handson.domain.PersonUpdateRequest;
 
@@ -21,6 +24,13 @@ public class PersonService {
 
   public PersonService(PersonRepository repository) {
     this.repository = repository;
+  }
+
+  @Transactional
+  public Mono<PersonResponse> createPerson(@NotNull PersonCreationRequest personCreationRequest) {
+    return requireNonNull(personCreationRequest).flatMap(p ->
+        repository.save(newPersonFromCreationRequest(personCreationRequest))
+            .map(PersonFunctions::responseFromPerson));
   }
 
   public Mono<Page<PersonResponse>> getPeople(@NotNull Pageable pageable) {
