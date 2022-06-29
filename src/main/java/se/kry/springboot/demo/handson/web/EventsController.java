@@ -61,7 +61,9 @@ public class EventsController {
   }
 
   @PutMapping("{id}/participants")
-  Flux<PersonResponse> updateEventParticipants(@PathVariable UUID id, EventParticipantsUpdateRequest request) {
+  Flux<PersonResponse> updateEventParticipants(
+      @PathVariable UUID id,
+      @Valid @RequestBody EventParticipantsUpdateRequest request) {
     return service.updateEventParticipants(id, request);
   }
 

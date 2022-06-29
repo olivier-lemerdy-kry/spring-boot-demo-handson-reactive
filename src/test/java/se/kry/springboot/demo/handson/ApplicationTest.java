@@ -243,7 +243,7 @@ class ApplicationTest {
     assertPersonRepositoryCountIs(1);
 
     var payload = objectMapper.createObjectNode()
-        .set("personIds", objectMapper.createArrayNode().add(personId.toString()));
+        .set("participantIds", objectMapper.createArrayNode().add(personId.toString()));
 
     webTestClient.put().uri("/api/v1/events/{id}/participants", eventId)
         .contentType(MediaType.APPLICATION_JSON)

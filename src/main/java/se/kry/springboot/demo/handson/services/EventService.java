@@ -5,8 +5,10 @@ import static se.kry.springboot.demo.handson.services.EventFunctions.newEventFro
 import static se.kry.springboot.demo.handson.services.EventFunctions.updateEventFromUpdateRequest;
 import static se.kry.springboot.demo.handson.util.MonoPreconditions.requireNonNull;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -102,7 +104,7 @@ public class EventService {
                                                       List<Participant> currentParticipants) {
     return participantRepository.saveAll(
         Flux.fromStream(
-            request.participantIds().stream().filter(
+            Stream.ofNullable(request.participantIds()).flatMap(Collection::stream).filter(
                     not(personId -> currentParticipants.stream().map(Participant::personId)
                         .anyMatch(participantPersonId -> participantPersonId.equals(personId))))
                 .map(newPersonId -> Participant.from(eventId, newPersonId)))).collectList();

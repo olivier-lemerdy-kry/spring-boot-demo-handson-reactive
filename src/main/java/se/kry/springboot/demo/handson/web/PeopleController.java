@@ -50,7 +50,7 @@ public class PeopleController {
   }
 
   @PatchMapping("{id}")
-  Mono<PersonResponse> updatePerson(@PathVariable UUID id, PersonUpdateRequest request) {
+  Mono<PersonResponse> updatePerson(@PathVariable UUID id, @Valid @RequestBody PersonUpdateRequest request) {
     return service.updatePerson(id, request);
   }
 
