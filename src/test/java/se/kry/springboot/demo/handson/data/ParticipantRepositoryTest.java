@@ -6,11 +6,12 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @DataR2dbcTest
@@ -57,27 +58,27 @@ class ParticipantRepositoryTest {
 
   @Test
   void save_all() {
-    var timeout = Duration.ofSeconds(2);
-    var event1 = template.insert(Event.from("Event 1", Defaults.Event.START, Defaults.Event.END))
-        .block(timeout);
-    var event2 = template.insert(Event.from("Event 2", Defaults.Event.START, Defaults.Event.END))
-        .block(timeout);
-    var person1 = template.insert(Person.from("Person 1"))
-        .block(timeout);
-    var person2 = template.insert(Person.from("Person 2"))
-        .block(timeout);
+    Mono.zip(
+            template.insert(Event.from("Event 1", Defaults.Event.START, Defaults.Event.END)),
+            template.insert(Event.from("Event 2", Defaults.Event.START, Defaults.Event.END)),
+            template.insert(Person.from("Person 1")),
+            template.insert(Person.from("Person 2")))
+        .flatMap(tuple4 -> {
+          var event1Id = tuple4.getT1().id();
+          var event2Id = tuple4.getT2().id();
+          var person1Id = tuple4.getT3().id();
+          var person2Id = tuple4.getT4().id();
 
-    repository.saveAll(List.of(
-            Participant.from(event1.id(), person1.id()),
-            Participant.from(event2.id(), person1.id()),
-            Participant.from(event1.id(), person2.id()),
-            Participant.from(event2.id(), person2.id())
-        )).collectList()
-        .as(StepVerifier::create)
+          return repository.saveAll(Flux.just(
+                  Participant.from(event1Id, person1Id),
+                  Participant.from(event2Id, person1Id),
+                  Participant.from(event1Id, person2Id),
+                  Participant.from(event2Id, person2Id)))
+              .collectList();
+        }).as(StepVerifier::create)
         .assertNext(participants -> {
           assertThat(participants).hasSize(4);
-        })
-        .verifyComplete();
+        }).verifyComplete();
   }
 
 }
