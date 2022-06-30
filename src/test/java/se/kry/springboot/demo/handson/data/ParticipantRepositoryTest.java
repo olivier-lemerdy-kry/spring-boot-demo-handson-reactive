@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
@@ -52,6 +53,31 @@ class ParticipantRepositoryTest {
           assertThat(participant.eventId()).isEqualTo(event.id());
           assertThat(participant.personId()).isEqualTo(person.id());
         }).verifyComplete();
+  }
+
+  @Test
+  void save_all() {
+    var timeout = Duration.ofSeconds(2);
+    var event1 = template.insert(Event.from("Event 1", Defaults.Event.START, Defaults.Event.END))
+        .block(timeout);
+    var event2 = template.insert(Event.from("Event 2", Defaults.Event.START, Defaults.Event.END))
+        .block(timeout);
+    var person1 = template.insert(Person.from("Person 1"))
+        .block(timeout);
+    var person2 = template.insert(Person.from("Person 2"))
+        .block(timeout);
+
+    repository.saveAll(List.of(
+            Participant.from(event1.id(), person1.id()),
+            Participant.from(event2.id(), person1.id()),
+            Participant.from(event1.id(), person2.id()),
+            Participant.from(event2.id(), person2.id())
+        )).collectList()
+        .as(StepVerifier::create)
+        .assertNext(participants -> {
+          assertThat(participants).hasSize(4);
+        })
+        .verifyComplete();
   }
 
 }

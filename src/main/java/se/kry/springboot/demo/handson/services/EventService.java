@@ -1,5 +1,6 @@
 package se.kry.springboot.demo.handson.services;
 
+import static java.util.Collections.emptyList;
 import static java.util.function.Predicate.not;
 import static se.kry.springboot.demo.handson.services.EventFunctions.newEventFromCreationRequest;
 import static se.kry.springboot.demo.handson.services.EventFunctions.updateEventFromUpdateRequest;
@@ -8,8 +9,12 @@ import static se.kry.springboot.demo.handson.util.MonoPreconditions.requireNonNu
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
+import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +22,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Signal;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
+import se.kry.springboot.demo.handson.data.Event;
 import se.kry.springboot.demo.handson.data.EventRepository;
 import se.kry.springboot.demo.handson.data.Participant;
 import se.kry.springboot.demo.handson.data.ParticipantRepository;
@@ -81,13 +90,22 @@ public class EventService {
             .map(EventFunctions::responseFromEvent));
   }
 
+  @Autowired
+  private Logger logger;
+
+  @Transactional
   public Flux<PersonResponse> updateEventParticipants(UUID eventId, EventParticipantsUpdateRequest request) {
     return FluxPreconditions.requireNonNull(eventId, request).flatMap(p ->
         participantRepository.findByEventId(eventId).collectList()
             .flatMap(currentParticipants ->
                 Mono.zip(
                     deleteObsoleteParticipants(request, currentParticipants),
-                    saveNewParticipants(eventId, request, currentParticipants))).thenMany(
+                    saveNewParticipants(eventId, request, currentParticipants)))
+            .map(tuple2 -> {
+              logger.info("New participants: {}", tuple2.getT2());
+              return tuple2.getT2();
+            })
+            .thenMany(
                 personRepository.findParticipantsByEventId(eventId)
                     .map(PersonFunctions::responseFromPerson)));
   }
@@ -96,18 +114,18 @@ public class EventService {
                                                 List<Participant> currentParticipants) {
     return participantRepository.deleteById(
         Flux.fromStream(currentParticipants.stream()
-                .filter(not(participant -> request.participantIds().contains(participant.personId()))))
+                .filter(not(participant -> request.personIds().contains(participant.personId()))))
             .map(Participant::id));
   }
 
   private Mono<List<Participant>> saveNewParticipants(UUID eventId, EventParticipantsUpdateRequest request,
                                                       List<Participant> currentParticipants) {
-    return participantRepository.saveAll(
-        Flux.fromStream(
-            Stream.ofNullable(request.participantIds()).flatMap(Collection::stream).filter(
+    return participantRepository.saveAll(Flux.fromStream(
+            Stream.ofNullable(request.personIds()).flatMap(Collection::stream).filter(
                     not(personId -> currentParticipants.stream().map(Participant::personId)
                         .anyMatch(participantPersonId -> participantPersonId.equals(personId))))
-                .map(newPersonId -> Participant.from(eventId, newPersonId)))).collectList();
+                .map(newPersonId -> Participant.from(eventId, newPersonId))))
+        .collectList();
   }
 
   @Transactional
