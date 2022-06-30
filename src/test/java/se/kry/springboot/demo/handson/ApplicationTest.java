@@ -8,10 +8,6 @@ import com.jayway.jsonpath.JsonPath;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -26,21 +22,16 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import reactor.test.StepVerifier;
-import se.kry.springboot.demo.handson.data.Event;
 import se.kry.springboot.demo.handson.data.EventRepository;
-import se.kry.springboot.demo.handson.data.ParticipantRepository;
-import se.kry.springboot.demo.handson.data.Person;
 import se.kry.springboot.demo.handson.data.PersonRepository;
-import se.kry.springboot.demo.handson.domain.EventParticipantsUpdateRequest;
-import se.kry.springboot.demo.handson.services.EventService;
 
 @SpringBootTest
-//@Testcontainers
+@Testcontainers
 @AutoConfigureWebTestClient
 class ApplicationTest {
 
-//  @Container
-//  private static final MySQLContainer<?> mySql = new MySQLContainer<>("mysql:8");
+  @Container
+  private static final MySQLContainer<?> mySql = new MySQLContainer<>("mysql:8");
 
   @Autowired
   private WebTestClient webTestClient;
@@ -55,16 +46,13 @@ class ApplicationTest {
   private EventRepository eventRepository;
 
   @Autowired
-  private ParticipantRepository participantRepository;
-
-  @Autowired
   private PersonRepository personRepository;
 
   @DynamicPropertySource
   static void mySqlProperties(DynamicPropertyRegistry registry) {
-//    registry.add("spring.datasource.url", mySql::getJdbcUrl);
-//    registry.add("spring.datasource.username", mySql::getUsername);
-//    registry.add("spring.datasource.password", mySql::getPassword);
+    registry.add("spring.datasource.url", mySql::getJdbcUrl);
+    registry.add("spring.datasource.username", mySql::getUsername);
+    registry.add("spring.datasource.password", mySql::getPassword);
   }
 
   @Test
@@ -268,24 +256,6 @@ class ApplicationTest {
         .jsonPath("$[0].name").isEqualTo("Jane Doe");
 
     logger.info("Ending step9: update event participants");
-  }
-
-  @Autowired
-  private EventService eventService;
-
-  @Test
-  void doStuff() {
-    var start = LocalDate.of(2001, Month.JANUARY, 1).atTime(12, 0);
-    var end = start.plusHours(1);
-    var event = eventRepository.save(Event.from("Some event", start, end)).block();
-    var person = personRepository.save(Person.from("John Doe")).block();
-
-    eventService.updateEventParticipants(event.id(), new EventParticipantsUpdateRequest(List.of(person.id())))
-        .collectList()
-        .as(StepVerifier::create)
-        .assertNext(personResponses -> {
-          assertThat(personResponses).hasSize(1);
-        }).verifyComplete();
   }
 
   void step10_read_event_participants(UUID eventId) {
