@@ -17,20 +17,19 @@ class PersonResponseJsonTest {
 
   @Test
   void serialize() throws IOException {
-    var uuid = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
-
-    var jsonContent = jacksonTester.write(new PersonResponse(uuid, "John Doe"));
+    var personResponse = new PersonResponse(PersonDefaults.ID, PersonDefaults.NAME);
+    var jsonContent = jacksonTester.write(personResponse);
 
     assertThat(jsonContent).isEqualToJson("PersonResponse.json");
   }
 
   @Test
   void deserialize() throws IOException {
-    var person = jacksonTester.readObject("PersonResponse.json");
+    var personResponse = jacksonTester.readObject("PersonResponse.json");
 
-    assertThat(person).isNotNull();
-    assertThat(person.id()).hasToString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
-    assertThat(person.name()).isEqualTo("John Doe");
+    assertThat(personResponse).isNotNull();
+    assertThat(personResponse.id()).hasToString(PersonDefaults.ID_STRING);
+    assertThat(personResponse.name()).isEqualTo(PersonDefaults.NAME);
   }
 
 }

@@ -37,13 +37,13 @@ class PersonUpdateRequestJsonTest {
     var personUpdateRequest = jacksonTester.readObject("PersonUpdateRequest.json");
 
     assertThat(personUpdateRequest).isNotNull();
-    assertThat(personUpdateRequest.name()).hasValue("John Doe");
+    assertThat(personUpdateRequest.name()).hasValue(PersonDefaults.NAME);
   }
 
   @Test
   void serialize() throws IOException {
-    var jsonContent = jacksonTester.write(
-        new PersonUpdateRequest(Optional.of("John Doe")));
+    var personUpdateRequest = new PersonUpdateRequest(Optional.of(PersonDefaults.NAME));
+    var jsonContent = jacksonTester.write(personUpdateRequest);
 
     assertThat(jsonContent).isEqualToJson("PersonUpdateRequest.json");
   }

@@ -13,23 +13,12 @@ import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import reactor.util.function.Tuples;
+import se.kry.springboot.demo.handson.domain.EventDefaults;
+import se.kry.springboot.demo.handson.domain.PersonDefaults;
 
 @DataR2dbcTest
 class ParticipantRepositoryTest {
-
-  interface Defaults {
-    interface Person {
-      String NAME = "John Doe";
-    }
-
-    interface Event {
-      String TITLE = "Some event";
-
-      LocalDateTime START = LocalDate.of(2001, Month.JANUARY, 1).atTime(12, 0);
-
-      LocalDateTime END = START.plusHours(1);
-    }
-  }
 
   @Autowired
   private R2dbcEntityTemplate template;
@@ -39,28 +28,35 @@ class ParticipantRepositoryTest {
 
   @Test
   void find_by_event_id() {
-    var timeout = Duration.ofSeconds(2);
-    var event = template.insert(Event.from(Defaults.Event.TITLE, Defaults.Event.START, Defaults.Event.END))
-        .block(timeout);
-    var person = template.insert(Person.from(Defaults.Person.NAME))
-        .block(timeout);
-    template.insert(Participant.from(event.id(), person.id()))
-        .block(timeout);
+    Mono.zip(
+            template.insert(Event.from(EventDefaults.TITLE, EventDefaults.START_TIME, EventDefaults.END_TIME)),
+            template.insert(Person.from(PersonDefaults.NAME))
+        ).flatMapMany(tuple -> {
+          var eventId = tuple.getT1().id();
+          var personId = tuple.getT2().id();
 
-    repository.findByEventId(event.id())
+          return template.insert(Participant.from(eventId, personId))
+              .thenMany(repository.findByEventId(eventId))
+              .map(participant -> Tuples.of(eventId, personId, participant));
+        })
         .as(StepVerifier::create)
-        .assertNext(participant -> {
+        .assertNext(tuple -> {
+          var eventId = tuple.getT1();
+          var personId = tuple.getT2();
+          var participant = tuple.getT3();
+
           assertThat(participant.id()).isNotNull();
-          assertThat(participant.eventId()).isEqualTo(event.id());
-          assertThat(participant.personId()).isEqualTo(person.id());
+          assertThat(participant.eventId()).isEqualTo(eventId);
+          assertThat(participant.personId()).isEqualTo(personId);
         }).verifyComplete();
+    ;
   }
 
   @Test
   void save_all() {
     Mono.zip(
-            template.insert(Event.from("Event 1", Defaults.Event.START, Defaults.Event.END)),
-            template.insert(Event.from("Event 2", Defaults.Event.START, Defaults.Event.END)),
+            template.insert(Event.from("Event 1", EventDefaults.START_TIME, EventDefaults.END_TIME)),
+            template.insert(Event.from("Event 2", EventDefaults.START_TIME, EventDefaults.END_TIME)),
             template.insert(Person.from("Person 1")),
             template.insert(Person.from("Person 2")))
         .flatMap(tuple4 -> {

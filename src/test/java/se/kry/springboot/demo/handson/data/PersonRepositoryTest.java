@@ -12,23 +12,11 @@ import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
 import org.springframework.dao.UncategorizedDataAccessException;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import reactor.test.StepVerifier;
+import se.kry.springboot.demo.handson.domain.EventDefaults;
+import se.kry.springboot.demo.handson.domain.PersonDefaults;
 
 @DataR2dbcTest
 class PersonRepositoryTest {
-
-  interface Defaults {
-    interface Person {
-      String NAME = "John Doe";
-    }
-
-    interface Event {
-      String TITLE = "Some event";
-
-      LocalDateTime START_TIME = LocalDate.of(2001, Month.JANUARY, 1).atTime(12, 0);
-
-      LocalDateTime END_TIME = START_TIME.plusHours(1);
-    }
-  }
 
   @Autowired
   private R2dbcEntityTemplate template;
@@ -38,11 +26,11 @@ class PersonRepositoryTest {
 
   @Test
   void save_person() {
-    repository.save(Person.from(Defaults.Person.NAME))
+    repository.save(Person.from(PersonDefaults.NAME))
         .as(StepVerifier::create)
         .assertNext(person -> {
           assertThat(person.id()).isNotNull();
-          assertThat(person.name()).isEqualTo(Defaults.Person.NAME);
+          assertThat(person.name()).isEqualTo(PersonDefaults.NAME);
         })
         .verifyComplete();
   }
@@ -64,9 +52,9 @@ class PersonRepositoryTest {
   void find_participants_by_event_id() {
     var timeout = Duration.ofSeconds(2);
     var event = template.insert(Event.from(
-            ParticipantRepositoryTest.Defaults.Event.TITLE, ParticipantRepositoryTest.Defaults.Event.START, ParticipantRepositoryTest.Defaults.Event.END))
+            EventDefaults.TITLE, EventDefaults.START_TIME, EventDefaults.END_TIME))
         .block(timeout);
-    var person = template.insert(Person.from(ParticipantRepositoryTest.Defaults.Person.NAME))
+    var person = template.insert(Person.from(PersonDefaults.NAME))
         .block(timeout);
     template.insert(Participant.from(event.id(), person.id()))
         .block(timeout);
@@ -75,7 +63,7 @@ class PersonRepositoryTest {
         .as(StepVerifier::create)
         .assertNext(participant -> {
           assertThat(participant.id()).isEqualTo(person.id());
-          assertThat(participant.name()).isEqualTo(Defaults.Person.NAME);
+          assertThat(participant.name()).isEqualTo(PersonDefaults.NAME);
         }).verifyComplete();
   }
 

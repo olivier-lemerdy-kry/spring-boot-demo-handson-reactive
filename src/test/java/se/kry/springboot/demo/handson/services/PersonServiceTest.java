@@ -5,28 +5,17 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.time.Instant;
 import java.util.Optional;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import se.kry.springboot.demo.handson.data.Person;
 import se.kry.springboot.demo.handson.data.PersonRepository;
+import se.kry.springboot.demo.handson.domain.PersonDefaults;
 import se.kry.springboot.demo.handson.domain.PersonUpdateRequest;
 
 class PersonServiceTest {
-
-  interface Defaults {
-    UUID ID = UUID.fromString("e1c47fc3-472d-4c14-8d7a-c1b4d1dbdfe5");
-
-    String NAME = "John Doe";
-
-    Instant CREATED_DATE = Instant.EPOCH;
-
-    Instant LAST_MODIFIED_DATE = Instant.EPOCH;
-  }
 
   private PersonRepository repository;
 
@@ -49,7 +38,7 @@ class PersonServiceTest {
 
   @Test
   void update_person_with_null_request_fails() {
-    service.updatePerson(Defaults.ID, null)
+    service.updatePerson(PersonDefaults.ID, null)
         .as(StepVerifier::create)
         .verifyError(NullPointerException.class);
   }
@@ -58,16 +47,17 @@ class PersonServiceTest {
   void update_person() {
     var request = new PersonUpdateRequest(Optional.of("Jane Doe"));
 
-    when(repository.findById(Defaults.ID)).thenReturn(
-        Mono.just(new Person(Defaults.ID, Defaults.NAME, Defaults.CREATED_DATE, Defaults.LAST_MODIFIED_DATE)));
+    when(repository.findById(PersonDefaults.ID)).thenReturn(
+        Mono.just(new Person(PersonDefaults.ID, PersonDefaults.NAME, PersonDefaults.CREATED_DATE,
+            PersonDefaults.LAST_MODIFIED_DATE)));
 
     when(repository.save(any())).thenAnswer(invocation ->
         Mono.just(invocation.getArgument(0, Person.class)));
 
-    service.updatePerson(Defaults.ID, request)
+    service.updatePerson(PersonDefaults.ID, request)
         .as(StepVerifier::create)
         .assertNext(personResponse -> {
-          assertThat(personResponse.id()).isEqualTo(Defaults.ID);
+          assertThat(personResponse.id()).isEqualTo(PersonDefaults.ID);
           assertThat(personResponse.name()).isEqualTo("Jane Doe");
         })
         .verifyComplete();
@@ -82,9 +72,9 @@ class PersonServiceTest {
 
   @Test
   void delete_person() {
-    when(repository.deleteById(Defaults.ID)).thenReturn(Mono.empty());
+    when(repository.deleteById(PersonDefaults.ID)).thenReturn(Mono.empty());
 
-    service.deletePerson(Defaults.ID)
+    service.deletePerson(PersonDefaults.ID)
         .as(StepVerifier::create)
         .verifyComplete();
   }

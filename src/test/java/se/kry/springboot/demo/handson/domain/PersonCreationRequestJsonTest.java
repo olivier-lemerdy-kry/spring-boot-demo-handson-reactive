@@ -19,13 +19,13 @@ class PersonCreationRequestJsonTest {
     var personCreationRequest = jacksonTester.readObject("PersonCreationRequest.json");
 
     assertThat(personCreationRequest).isNotNull();
-    assertThat(personCreationRequest.name()).isEqualTo("John Doe");
+    assertThat(personCreationRequest.name()).isEqualTo(PersonDefaults.NAME);
   }
 
   @Test
   void serialize() throws IOException {
     var jsonContent = jacksonTester.write(
-        new PersonCreationRequest("John Doe"));
+        new PersonCreationRequest(PersonDefaults.NAME));
 
     assertThat(jsonContent).isEqualToJson("PersonUpdateRequest.json");
   }

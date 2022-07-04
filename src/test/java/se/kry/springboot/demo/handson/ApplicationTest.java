@@ -24,6 +24,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import reactor.test.StepVerifier;
 import se.kry.springboot.demo.handson.data.EventRepository;
 import se.kry.springboot.demo.handson.data.PersonRepository;
+import se.kry.springboot.demo.handson.domain.EventDefaults;
+import se.kry.springboot.demo.handson.domain.PersonDefaults;
 
 @SpringBootTest
 @Testcontainers
@@ -78,7 +80,7 @@ class ApplicationTest {
     assertEventRepositoryCountIs(0);
 
     var payload = objectMapper.createObjectNode()
-        .put("title", "Some event")
+        .put("title", EventDefaults.TITLE)
         .put("startTime", "2001-01-01T00:00:00")
         .put("endTime", "2001-01-01T12:00:00")
         .toString();
@@ -89,7 +91,7 @@ class ApplicationTest {
         .exchange()
         .expectStatus().isCreated()
         .expectBody()
-        .jsonPath("$.title").isEqualTo("Some event")
+        .jsonPath("$.title").isEqualTo(EventDefaults.TITLE)
         .jsonPath("$.startTime").isEqualTo("2001-01-01T00:00:00")
         .jsonPath("$.endTime").isEqualTo("2001-01-01T12:00:00")
         .returnResult();
@@ -113,7 +115,7 @@ class ApplicationTest {
         .expectStatus().isOk()
         .expectBody()
         .jsonPath("$.content").isArray()
-        .jsonPath("$.content[0].title").isEqualTo("Some event")
+        .jsonPath("$.content[0].title").isEqualTo(EventDefaults.TITLE)
         .jsonPath("$.content[0].startTime").isEqualTo("2001-01-01T00:00:00")
         .jsonPath("$.content[0].endTime").isEqualTo("2001-01-01T12:00:00");
 
@@ -126,7 +128,7 @@ class ApplicationTest {
     assertEventRepositoryCountIs(1);
 
     var payload = objectMapper.createObjectNode()
-        .put("title", "Some other event")
+        .put("title", EventDefaults.OTHER_TITLE)
         .put("startTime", "2001-01-01T01:00:00")
         .put("endTime", "2001-01-01T13:00:00")
         .toString();
@@ -137,7 +139,7 @@ class ApplicationTest {
         .exchange()
         .expectStatus().isOk()
         .expectBody()
-        .jsonPath("$.title").isEqualTo("Some other event")
+        .jsonPath("$.title").isEqualTo(EventDefaults.OTHER_TITLE)
         .jsonPath("$.startTime").isEqualTo("2001-01-01T01:00:00")
         .jsonPath("$.endTime").isEqualTo("2001-01-01T13:00:00");
 
@@ -153,7 +155,7 @@ class ApplicationTest {
         .exchange()
         .expectStatus().isOk()
         .expectBody()
-        .jsonPath("$.title").isEqualTo("Some other event")
+        .jsonPath("$.title").isEqualTo(EventDefaults.OTHER_TITLE)
         .jsonPath("$.startTime").isEqualTo("2001-01-01T01:00:00")
         .jsonPath("$.endTime").isEqualTo("2001-01-01T13:00:00");
 
@@ -166,7 +168,7 @@ class ApplicationTest {
     assertPersonRepositoryCountIs(0);
 
     var payload = objectMapper.createObjectNode()
-        .put("name", "John Doe")
+        .put("name", PersonDefaults.NAME)
         .toString();
 
     var result = webTestClient.post().uri("/api/v1/people")
@@ -175,7 +177,7 @@ class ApplicationTest {
         .exchange()
         .expectStatus().isCreated()
         .expectBody()
-        .jsonPath("$.name").isEqualTo("John Doe")
+        .jsonPath("$.name").isEqualTo(PersonDefaults.NAME)
         .returnResult();
 
     assertPersonRepositoryCountIs(1);
@@ -197,7 +199,7 @@ class ApplicationTest {
         .expectStatus().isOk()
         .expectBody()
         .jsonPath("$.content").isArray()
-        .jsonPath("$.content[0].name").isEqualTo("John Doe");
+        .jsonPath("$.content[0].name").isEqualTo(PersonDefaults.NAME);
 
     logger.info("Ending step6: read people");
   }
@@ -208,7 +210,7 @@ class ApplicationTest {
     assertPersonRepositoryCountIs(1);
 
     var payload = objectMapper.createObjectNode()
-        .put("name", "Jane Doe")
+        .put("name", PersonDefaults.OTHER_NAME)
         .toString();
 
     webTestClient.patch().uri("/api/v1/people/{id}", id)
@@ -217,7 +219,7 @@ class ApplicationTest {
         .exchange()
         .expectStatus().isOk()
         .expectBody()
-        .jsonPath("$.name").isEqualTo("Jane Doe");
+        .jsonPath("$.name").isEqualTo(PersonDefaults.OTHER_NAME);
 
     logger.info("Ending step7: update person");
   }
@@ -231,7 +233,7 @@ class ApplicationTest {
         .exchange()
         .expectStatus().isOk()
         .expectBody()
-        .jsonPath("$.name").isEqualTo("Jane Doe");
+        .jsonPath("$.name").isEqualTo(PersonDefaults.OTHER_NAME);
 
     logger.info("Ending step8: read person");
   }
@@ -253,7 +255,7 @@ class ApplicationTest {
         .expectBody()
         .jsonPath("$").isArray()
         .jsonPath("$[0].id").isEqualTo(personId.toString())
-        .jsonPath("$[0].name").isEqualTo("Jane Doe");
+        .jsonPath("$[0].name").isEqualTo(PersonDefaults.OTHER_NAME);
 
     logger.info("Ending step9: update event participants");
   }
@@ -267,7 +269,7 @@ class ApplicationTest {
         .expectBody()
         .jsonPath("$").isArray()
         .jsonPath("$[0].id").isNotEmpty()
-        .jsonPath("$[0].name").isEqualTo("Jane Doe");
+        .jsonPath("$[0].name").isEqualTo(PersonDefaults.OTHER_NAME);
 
     logger.info("Ending step10: read event participants");
   }

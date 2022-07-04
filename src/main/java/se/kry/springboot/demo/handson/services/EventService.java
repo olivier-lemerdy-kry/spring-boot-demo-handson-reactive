@@ -1,14 +1,10 @@
 package se.kry.springboot.demo.handson.services;
 
-import static java.util.function.Predicate.not;
 import static se.kry.springboot.demo.handson.services.EventFunctions.newEventFromCreationRequest;
 import static se.kry.springboot.demo.handson.services.EventFunctions.updateEventFromUpdateRequest;
 import static se.kry.springboot.demo.handson.util.MonoPreconditions.requireNonNull;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
