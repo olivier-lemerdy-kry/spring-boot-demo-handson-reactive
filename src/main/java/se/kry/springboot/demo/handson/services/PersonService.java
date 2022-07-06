@@ -47,6 +47,7 @@ public class PersonService {
         .map(PersonFunctions::responseFromPerson);
   }
 
+  @Transactional
   public Mono<PersonResponse> updatePerson(@NotNull UUID id, @NotNull PersonUpdateRequest personUpdateRequest) {
     return requireNonNull(id, personUpdateRequest).flatMap(p ->
         repository.findById(id)
@@ -55,6 +56,7 @@ public class PersonService {
             .map(PersonFunctions::responseFromPerson));
   }
 
+  @Transactional
   public Mono<Void> deletePerson(@NotNull UUID id) {
     return requireNonNull(id).flatMap(p -> repository.deleteById(id));
   }

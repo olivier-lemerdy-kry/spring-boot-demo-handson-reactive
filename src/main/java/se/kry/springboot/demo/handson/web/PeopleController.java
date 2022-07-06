@@ -31,8 +31,8 @@ public class PeopleController {
   }
 
   @PostMapping
-  Mono<ResponseEntity<PersonResponse>> createEvent(@Valid @RequestBody PersonCreationRequest personCreationRequest,
-                                                   UriComponentsBuilder builder) {
+  Mono<ResponseEntity<PersonResponse>> createPerson(@Valid @RequestBody PersonCreationRequest personCreationRequest,
+                                                    UriComponentsBuilder builder) {
     return service.createPerson(personCreationRequest).map(response -> {
       var location = builder.pathSegment("api", "v1", "people", "{id}").build(response.id());
       return ResponseEntity.created(location).body(response);
@@ -45,13 +45,19 @@ public class PeopleController {
   }
 
   @GetMapping("{id}")
-  Mono<PersonResponse> readPerson(@PathVariable UUID id) {
-    return service.getPerson(id);
+  Mono<ResponseEntity<PersonResponse>> readPerson(@PathVariable UUID id) {
+    return service.getPerson(id)
+        .map(ResponseEntity::ok)
+        .defaultIfEmpty(ResponseEntity.notFound().build());
   }
 
   @PatchMapping("{id}")
-  Mono<PersonResponse> updatePerson(@PathVariable UUID id, @Valid @RequestBody PersonUpdateRequest request) {
-    return service.updatePerson(id, request);
+  Mono<ResponseEntity<PersonResponse>> updatePerson(
+      @PathVariable UUID id,
+      @Valid @RequestBody PersonUpdateRequest request) {
+    return service.updatePerson(id, request)
+        .map(ResponseEntity::ok)
+        .defaultIfEmpty(ResponseEntity.notFound().build());
   }
 
   @DeleteMapping("{id}")

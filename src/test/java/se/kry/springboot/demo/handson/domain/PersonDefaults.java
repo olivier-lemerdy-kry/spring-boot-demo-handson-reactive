@@ -11,9 +11,13 @@ public interface PersonDefaults {
 
   String NAME = "John Doe";
 
-  String OTHER_NAME = "Jane Doe";
-
   Instant CREATED_DATE = Instant.EPOCH;
 
   Instant LAST_MODIFIED_DATE = Instant.EPOCH;
+
+  String OTHER_ID_STRING = "b5130fc9-aec2-4a54-b2ae-a709195041cf";
+
+  UUID OTHER_ID = UUID.fromString(OTHER_ID_STRING);
+
+  String OTHER_NAME = "Jane Doe";
 }

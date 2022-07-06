@@ -1,5 +1,6 @@
 package se.kry.springboot.demo.handson.web;
 
+import static java.util.Collections.emptyList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -306,12 +307,30 @@ class EventsControllerTest {
   }
 
   @Test
+  void update_event_participants_empty() {
+    var payload = objectMapper.createObjectNode();
+
+    when(service.updateEventParticipants(EventDefaults.ID, new EventParticipantsUpdateRequest(emptyList())))
+        .thenReturn(Flux.empty());
+
+    webTestClient.put().uri("/api/v1/events/{id}/participants", EventDefaults.ID)
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(payload)
+        .exchange()
+        .expectStatus().isOk()
+        .expectBody()
+        .jsonPath("$").isArray()
+        .jsonPath("$").isEmpty();
+  }
+
+  @Test
   void delete_event() {
     when(service.deleteEvent(EventDefaults.ID)).thenReturn(Mono.empty());
 
     webTestClient.delete().uri("/api/v1/events/{id}", EventDefaults.ID)
         .exchange()
-        .expectStatus().isOk();
+        .expectStatus().isOk()
+        .expectBody().isEmpty();
   }
 
   @Test
