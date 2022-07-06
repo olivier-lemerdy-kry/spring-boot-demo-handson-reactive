@@ -5,12 +5,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.Month;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
@@ -43,16 +39,13 @@ class EventsControllerTest {
 
   @Test
   void create_event() {
-    var startTime = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
-    var endTime = startTime.plusHours(12);
-
-    when(service.createEvent(any())).thenReturn(
-        Mono.just(new EventResponse(EventDefaults.ID, EventDefaults.TITLE, startTime, endTime)));
+    when(service.createEvent(any())).thenReturn(Mono.just(
+        new EventResponse(EventDefaults.ID, EventDefaults.TITLE, EventDefaults.START_TIME, EventDefaults.END_TIME)));
 
     var payload = objectMapper.createObjectNode()
         .put("title", EventDefaults.TITLE)
-        .put("startTime", "2001-01-01T00:00:00")
-        .put("endTime", "2001-01-01T12:00:00")
+        .put("startTime", EventDefaults.START_TIME_STRING)
+        .put("endTime", EventDefaults.END_TIME_STRING)
         .toString();
 
     webTestClient.post().uri("/api/v1/events")
@@ -64,16 +57,16 @@ class EventsControllerTest {
         .expectBody()
         .jsonPath("$.id").isEqualTo(EventDefaults.ID_STRING)
         .jsonPath("$.title").isEqualTo(EventDefaults.TITLE)
-        .jsonPath("$.startTime").isEqualTo("2001-01-01T00:00:00")
-        .jsonPath("$.endTime").isEqualTo("2001-01-01T12:00:00");
+        .jsonPath("$.startTime").isEqualTo(EventDefaults.START_TIME_STRING)
+        .jsonPath("$.endTime").isEqualTo(EventDefaults.END_TIME_STRING);
   }
 
   @Test
   void create_event_with_blank_title() {
     var payload = objectMapper.createObjectNode()
         .put("title", " ")
-        .put("startTime", "2001-01-01T00:00:00")
-        .put("endTime", "2001-01-01T00:00:00")
+        .put("startTime", EventDefaults.START_TIME_STRING)
+        .put("endTime", EventDefaults.END_TIME_STRING)
         .toString();
 
     webTestClient.post().uri("/api/v1/events")
@@ -87,8 +80,8 @@ class EventsControllerTest {
   void create_event_with_too_long_title() {
     var payload = objectMapper.createObjectNode()
         .put("title", "X".repeat(300))
-        .put("startTime", "2001-01-01T00:00:00")
-        .put("endTime", "2001-01-01T12:00:00")
+        .put("startTime", EventDefaults.START_TIME_STRING)
+        .put("endTime", EventDefaults.END_TIME_STRING)
         .toString();
 
     webTestClient.post().uri("/api/v1/events")
@@ -102,7 +95,7 @@ class EventsControllerTest {
   void create_event_with_null_start() {
     var payload = objectMapper.createObjectNode()
         .put("title", EventDefaults.TITLE)
-        .put("endTime", "2001-01-01T00:00:00")
+        .put("endTime", EventDefaults.END_TIME_STRING)
         .toString();
 
     webTestClient.post().uri("/api/v1/events")
@@ -116,7 +109,7 @@ class EventsControllerTest {
   void create_event_with_null_end() {
     var payload = objectMapper.createObjectNode()
         .put("title", EventDefaults.TITLE)
-        .put("startTime", "2001-01-01T00:00:00")
+        .put("startTime", EventDefaults.START_TIME_STRING)
         .toString();
 
     webTestClient.post().uri("/api/v1/events")
@@ -130,8 +123,8 @@ class EventsControllerTest {
   void create_event_with_start_after_end() {
     var payload = objectMapper.createObjectNode()
         .put("title", EventDefaults.TITLE)
-        .put("startTime", "2001-01-01T12:00:00")
-        .put("endTime", "2001-01-01T00:00:00")
+        .put("startTime", EventDefaults.END_TIME_STRING)
+        .put("endTime", EventDefaults.START_TIME_STRING)
         .toString();
 
     webTestClient.post().uri("/api/v1/events")
@@ -143,16 +136,10 @@ class EventsControllerTest {
 
   @Test
   void read_events() {
-    var start1 = EventDefaults.START_TIME;
-    var end1 = EventDefaults.END_TIME;
-
-    var uuid2 = UUID.fromString("8ebea9a7-e0ef-4a62-a729-aff26134f9d8");
-    var start2 = start1.plusHours(1);
-    var end2 = end1.plusHours(1);
-
     var content = List.of(
-        new EventResponse(EventDefaults.ID, EventDefaults.TITLE, start1, end1),
-        new EventResponse(uuid2, EventDefaults.OTHER_TITLE, start2, end2)
+        new EventResponse(EventDefaults.ID, EventDefaults.TITLE, EventDefaults.START_TIME, EventDefaults.END_TIME),
+        new EventResponse(EventDefaults.OTHER_ID, EventDefaults.OTHER_TITLE, EventDefaults.OTHER_START_TIME,
+            EventDefaults.OTHER_END_TIME)
     );
 
     var pageable = PageRequest.ofSize(20);
@@ -168,12 +155,12 @@ class EventsControllerTest {
         .jsonPath("$.content").isArray()
         .jsonPath("$.content[0].id").isEqualTo(EventDefaults.ID_STRING)
         .jsonPath("$.content[0].title").isEqualTo(EventDefaults.TITLE)
-        .jsonPath("$.content[0].startTime").isEqualTo("2001-01-01T12:00:00")
-        .jsonPath("$.content[0].endTime").isEqualTo("2001-01-01T13:00:00")
-        .jsonPath("$.content[1].id").isEqualTo("8ebea9a7-e0ef-4a62-a729-aff26134f9d8")
+        .jsonPath("$.content[0].startTime").isEqualTo(EventDefaults.START_TIME_STRING)
+        .jsonPath("$.content[0].endTime").isEqualTo(EventDefaults.END_TIME_STRING)
+        .jsonPath("$.content[1].id").isEqualTo(EventDefaults.OTHER_ID_STRING)
         .jsonPath("$.content[1].title").isEqualTo(EventDefaults.OTHER_TITLE)
-        .jsonPath("$.content[1].startTime").isEqualTo("2001-01-01T13:00:00")
-        .jsonPath("$.content[1].endTime").isEqualTo("2001-01-01T14:00:00")
+        .jsonPath("$.content[1].startTime").isEqualTo(EventDefaults.OTHER_START_TIME_STRING)
+        .jsonPath("$.content[1].endTime").isEqualTo(EventDefaults.OTHER_END_TIME_STRING)
         .jsonPath("$.pageable").isMap()
         .jsonPath("$.pageable.sort").isMap()
         .jsonPath("$.pageable.sort.empty").isEqualTo(true)
@@ -200,19 +187,16 @@ class EventsControllerTest {
 
   @Test
   void read_event() {
-    var start = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
-    var end = start.plusHours(12);
-
-    when(service.getEvent(EventDefaults.ID)).thenReturn(
-        Mono.just(new EventResponse(EventDefaults.ID, EventDefaults.TITLE, start, end)));
+    when(service.getEvent(EventDefaults.ID)).thenReturn(Mono.just(
+        new EventResponse(EventDefaults.ID, EventDefaults.TITLE, EventDefaults.START_TIME, EventDefaults.END_TIME)));
 
     webTestClient.get().uri("/api/v1/events/{id}", EventDefaults.ID)
         .exchange()
         .expectStatus().isOk()
         .expectBody()
         .jsonPath("$.title").isEqualTo(EventDefaults.TITLE)
-        .jsonPath("$.startTime").isEqualTo("2001-01-01T00:00:00")
-        .jsonPath("$.endTime").isEqualTo("2001-01-01T12:00:00");
+        .jsonPath("$.startTime").isEqualTo(EventDefaults.START_TIME_STRING)
+        .jsonPath("$.endTime").isEqualTo(EventDefaults.END_TIME_STRING);
   }
 
   @Test
@@ -289,8 +273,8 @@ class EventsControllerTest {
   @Test
   void update_event_with_start_after_end() {
     var payload = objectMapper.createObjectNode()
-        .put("startTime", "2001-01-01T12:00:00")
-        .put("endTime", "2001-01-01T00:00:00")
+        .put("startTime", EventDefaults.END_TIME_STRING)
+        .put("endTime", EventDefaults.START_TIME_STRING)
         .toString();
 
     webTestClient.patch().uri("/api/v1/events/{id}", EventDefaults.ID)

@@ -191,17 +191,16 @@ class EventServiceTest {
 
   @Test
   void update_event() {
-    var anotherStartTime = LocalDate.of(2002, Month.FEBRUARY, 2).atTime(14, 0);
-    var anotherEndTime = anotherStartTime.plusHours(2);
+    var request = new EventUpdateRequest(
+        Optional.of(EventDefaults.OTHER_TITLE),
+        Optional.of(EventDefaults.OTHER_START_TIME),
+        Optional.of(EventDefaults.OTHER_END_TIME));
 
-    var request =
-        new EventUpdateRequest(Optional.of("Some other event"), Optional.of(anotherStartTime), Optional.of(anotherEndTime));
-
-    when(eventRepository.findById(EventDefaults.ID)).thenReturn(
-        Mono.just(
-            new Event(EventDefaults.ID, EventDefaults.TITLE, EventDefaults.START_TIME, EventDefaults.END_TIME,
-                EventDefaults.CREATED_DATE,
-                EventDefaults.LAST_MODIFIED_DATE)));
+    when(eventRepository.findById(EventDefaults.ID)).thenReturn(Mono.just(
+        new Event(
+            EventDefaults.ID, EventDefaults.TITLE,
+            EventDefaults.START_TIME, EventDefaults.END_TIME,
+            EventDefaults.CREATED_DATE, EventDefaults.LAST_MODIFIED_DATE)));
 
     when(eventRepository.save(any())).thenAnswer(invocation ->
         Mono.just(invocation.getArgument(0, Event.class)));
@@ -210,9 +209,9 @@ class EventServiceTest {
         .as(StepVerifier::create)
         .assertNext(eventResponse -> {
           assertThat(eventResponse.id()).isEqualTo(EventDefaults.ID);
-          assertThat(eventResponse.title()).isEqualTo("Some other event");
-          assertThat(eventResponse.startTime()).isEqualTo(anotherStartTime);
-          assertThat(eventResponse.endTime()).isEqualTo(anotherEndTime);
+          assertThat(eventResponse.title()).isEqualTo(EventDefaults.OTHER_TITLE);
+          assertThat(eventResponse.startTime()).isEqualTo(EventDefaults.OTHER_START_TIME);
+          assertThat(eventResponse.endTime()).isEqualTo(EventDefaults.OTHER_END_TIME);
         })
         .verifyComplete();
   }

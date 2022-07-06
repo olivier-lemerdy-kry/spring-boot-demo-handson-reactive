@@ -81,8 +81,8 @@ class ApplicationTest {
 
     var payload = objectMapper.createObjectNode()
         .put("title", EventDefaults.TITLE)
-        .put("startTime", "2001-01-01T00:00:00")
-        .put("endTime", "2001-01-01T12:00:00")
+        .put("startTime", EventDefaults.START_TIME_STRING)
+        .put("endTime", EventDefaults.END_TIME_STRING)
         .toString();
 
     var result = webTestClient.post().uri("/api/v1/events")
@@ -92,8 +92,8 @@ class ApplicationTest {
         .expectStatus().isCreated()
         .expectBody()
         .jsonPath("$.title").isEqualTo(EventDefaults.TITLE)
-        .jsonPath("$.startTime").isEqualTo("2001-01-01T00:00:00")
-        .jsonPath("$.endTime").isEqualTo("2001-01-01T12:00:00")
+        .jsonPath("$.startTime").isEqualTo(EventDefaults.START_TIME_STRING)
+        .jsonPath("$.endTime").isEqualTo(EventDefaults.END_TIME_STRING)
         .returnResult();
 
     assertEventRepositoryCountIs(1);
@@ -116,8 +116,8 @@ class ApplicationTest {
         .expectBody()
         .jsonPath("$.content").isArray()
         .jsonPath("$.content[0].title").isEqualTo(EventDefaults.TITLE)
-        .jsonPath("$.content[0].startTime").isEqualTo("2001-01-01T00:00:00")
-        .jsonPath("$.content[0].endTime").isEqualTo("2001-01-01T12:00:00");
+        .jsonPath("$.content[0].startTime").isEqualTo(EventDefaults.START_TIME_STRING)
+        .jsonPath("$.content[0].endTime").isEqualTo(EventDefaults.END_TIME_STRING);
 
     logger.info("Ending step2: read events");
   }
@@ -129,8 +129,8 @@ class ApplicationTest {
 
     var payload = objectMapper.createObjectNode()
         .put("title", EventDefaults.OTHER_TITLE)
-        .put("startTime", "2001-01-01T01:00:00")
-        .put("endTime", "2001-01-01T13:00:00")
+        .put("startTime", EventDefaults.OTHER_START_TIME_STRING)
+        .put("endTime", EventDefaults.OTHER_END_TIME_STRING)
         .toString();
 
     webTestClient.patch().uri("/api/v1/events/{id}", id)
@@ -140,8 +140,8 @@ class ApplicationTest {
         .expectStatus().isOk()
         .expectBody()
         .jsonPath("$.title").isEqualTo(EventDefaults.OTHER_TITLE)
-        .jsonPath("$.startTime").isEqualTo("2001-01-01T01:00:00")
-        .jsonPath("$.endTime").isEqualTo("2001-01-01T13:00:00");
+        .jsonPath("$.startTime").isEqualTo(EventDefaults.OTHER_START_TIME_STRING)
+        .jsonPath("$.endTime").isEqualTo(EventDefaults.OTHER_END_TIME_STRING);
 
     logger.info("Ending step3: update event");
   }
@@ -156,8 +156,8 @@ class ApplicationTest {
         .expectStatus().isOk()
         .expectBody()
         .jsonPath("$.title").isEqualTo(EventDefaults.OTHER_TITLE)
-        .jsonPath("$.startTime").isEqualTo("2001-01-01T01:00:00")
-        .jsonPath("$.endTime").isEqualTo("2001-01-01T13:00:00");
+        .jsonPath("$.startTime").isEqualTo(EventDefaults.OTHER_START_TIME_STRING)
+        .jsonPath("$.endTime").isEqualTo(EventDefaults.OTHER_END_TIME_STRING);
 
     logger.info("Ending step4: read event");
   }

@@ -29,7 +29,7 @@ class PersonServiceTest {
 
   @Test
   void update_person_with_null_id_fails() {
-    var request = new PersonUpdateRequest(Optional.of("Jane Doe"));
+    var request = new PersonUpdateRequest(Optional.of(PersonDefaults.OTHER_NAME));
 
     service.updatePerson(null, request)
         .as(StepVerifier::create)
@@ -45,7 +45,7 @@ class PersonServiceTest {
 
   @Test
   void update_person() {
-    var request = new PersonUpdateRequest(Optional.of("Jane Doe"));
+    var request = new PersonUpdateRequest(Optional.of(PersonDefaults.OTHER_NAME));
 
     when(repository.findById(PersonDefaults.ID)).thenReturn(
         Mono.just(new Person(PersonDefaults.ID, PersonDefaults.NAME, PersonDefaults.CREATED_DATE,
@@ -58,7 +58,7 @@ class PersonServiceTest {
         .as(StepVerifier::create)
         .assertNext(personResponse -> {
           assertThat(personResponse.id()).isEqualTo(PersonDefaults.ID);
-          assertThat(personResponse.name()).isEqualTo("Jane Doe");
+          assertThat(personResponse.name()).isEqualTo(PersonDefaults.OTHER_NAME);
         })
         .verifyComplete();
   }

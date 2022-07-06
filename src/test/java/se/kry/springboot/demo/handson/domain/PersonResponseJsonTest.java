@@ -28,7 +28,7 @@ class PersonResponseJsonTest {
     var personResponse = jacksonTester.readObject("PersonResponse.json");
 
     assertThat(personResponse).isNotNull();
-    assertThat(personResponse.id()).hasToString(PersonDefaults.ID_STRING);
+    assertThat(personResponse.id()).isEqualTo(PersonDefaults.ID);
     assertThat(personResponse.name()).isEqualTo(PersonDefaults.NAME);
   }
 
