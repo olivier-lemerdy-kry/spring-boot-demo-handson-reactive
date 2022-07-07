@@ -2,11 +2,6 @@ package se.kry.springboot.demo.handson.data;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.Month;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
@@ -17,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import se.kry.springboot.demo.handson.domain.EventDefaults;
 
 @DataR2dbcTest
 class EventRepositoryTest {
@@ -29,34 +25,30 @@ class EventRepositoryTest {
 
   @Test
   void get_event() {
-    var id = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
-    var start = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
-    var end = start.plusHours(12);
-
-    template.insert(new Event(id, "Some event", start, end, Instant.EPOCH, Instant.EPOCH)).block();
-
-    var event = repository.findById(id);
-
-    event.as(StepVerifier::create).assertNext(actual -> {
-      assertThat(actual.id()).isEqualTo(id);
-      assertThat(actual.title()).isEqualTo("Some event");
-      assertThat(actual.startTime()).hasToString("2001-01-01T00:00");
-      assertThat(actual.endTime()).hasToString("2001-01-01T12:00");
-    }).verifyComplete();
+    template.insert(
+            new Event(EventDefaults.ID, EventDefaults.TITLE,
+                EventDefaults.START_TIME, EventDefaults.END_TIME,
+                EventDefaults.CREATED_DATE, EventDefaults.LAST_MODIFIED_DATE))
+        .then(repository.findById(EventDefaults.ID))
+        .as(StepVerifier::create).assertNext(actual -> {
+          assertThat(actual.id()).isEqualTo(EventDefaults.ID);
+          assertThat(actual.title()).isEqualTo(EventDefaults.TITLE);
+          assertThat(actual.startTime()).hasToString("2001-01-01T12:00");
+          assertThat(actual.endTime()).hasToString("2001-01-01T13:00");
+        }).verifyComplete();
   }
 
   @Test
   void get_events() {
-    var start = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
-
     var inserts = IntStream.range(0, 50)
-        .mapToObj(i -> Event.from("Event" + i, start.plusDays(i), start.plusDays(i).plusHours(12)))
+        .mapToObj(i -> Event.from("Event" + i,
+            EventDefaults.START_TIME.plusDays(i),
+            EventDefaults.START_TIME.plusDays(i).plusHours(1)))
         .map(template::insert)
         .collect(Collectors.toList());
-    Mono.when(inserts).block();
 
-    repository.findBy(Pageable.ofSize(20))
-        .collectList()
+    Mono.when(inserts)
+        .then(repository.findBy(Pageable.ofSize(20)).collectList())
         .as(StepVerifier::create)
         .assertNext(events ->
             assertThat(events).hasSize(20)
@@ -65,27 +57,23 @@ class EventRepositoryTest {
 
   @Test
   void save_event() {
-    var start = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
-    var end = start.plusHours(12);
-
-    repository.save(Event.from("Some event", start, end))
+    var event = Event.from(EventDefaults.TITLE, EventDefaults.START_TIME, EventDefaults.END_TIME);
+    repository.save(event)
         .as(StepVerifier::create)
-        .assertNext(event -> {
-          assertThat(event).isNotNull();
-          assertThat(event.id()).isNotNull();
-          assertThat(event.title()).isEqualTo("Some event");
-          assertThat(event.startTime()).hasToString("2001-01-01T00:00");
-          assertThat(event.endTime()).hasToString("2001-01-01T12:00");
+        .assertNext(actual -> {
+          assertThat(actual).isNotNull();
+          assertThat(actual.id()).isNotNull();
+          assertThat(actual.title()).isEqualTo(EventDefaults.TITLE);
+          assertThat(actual.startTime()).hasToString("2001-01-01T12:00");
+          assertThat(actual.endTime()).hasToString("2001-01-01T13:00");
         }).verifyComplete();
   }
 
   @Test
   void save_event_with_too_long_title() {
     var title = "X".repeat(300);
-    var start = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
-    var end = start.plusHours(12);
 
-    repository.save(Event.from(title, start, end))
+    repository.save(Event.from(title, EventDefaults.START_TIME, EventDefaults.END_TIME))
         .as(StepVerifier::create)
         .expectErrorSatisfies(exception ->
             assertThat(exception)

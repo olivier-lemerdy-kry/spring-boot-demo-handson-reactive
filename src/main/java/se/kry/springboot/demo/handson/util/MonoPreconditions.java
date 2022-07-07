@@ -4,7 +4,7 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 
-public enum ReactivePreconditions {
+public enum MonoPreconditions {
   ;
 
   public static <T> Mono<T> requireNonNull(T object) {

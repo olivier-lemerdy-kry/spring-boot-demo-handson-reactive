@@ -23,6 +23,9 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import reactor.test.StepVerifier;
 import se.kry.springboot.demo.handson.data.EventRepository;
+import se.kry.springboot.demo.handson.data.PersonRepository;
+import se.kry.springboot.demo.handson.domain.EventDefaults;
+import se.kry.springboot.demo.handson.domain.PersonDefaults;
 
 @SpringBootTest
 @Testcontainers
@@ -42,7 +45,10 @@ class ApplicationTest {
   private Logger logger;
 
   @Autowired
-  private EventRepository repository;
+  private EventRepository eventRepository;
+
+  @Autowired
+  private PersonRepository personRepository;
 
   @DynamicPropertySource
   static void mySqlProperties(DynamicPropertyRegistry registry) {
@@ -53,22 +59,30 @@ class ApplicationTest {
 
   @Test
   void scenario() throws IOException {
-    var id = step1_create_event();
+    var eventId = step1_create_event();
     step2_read_events();
-    step3_update_event(id);
-    step4_read_event(id);
-    step5_delete_event(id);
+    step3_update_event(eventId);
+    step4_read_event(eventId);
+    var personId = step5_create_person();
+    step6_read_people();
+    step7_update_person(personId);
+    step8_read_person(personId);
+    step9_update_event_participants(eventId, personId);
+    step10_read_event_participants(eventId);
+    step11_update_event_participants_to_empty(eventId);
+    step12_delete_person(personId);
+    step13_delete_event(eventId);
   }
 
   UUID step1_create_event() throws IOException {
     logger.info("Starting step1: create event");
 
-    assertRepositoryCountIs(0);
+    assertEventRepositoryCountIs(0);
 
     var payload = objectMapper.createObjectNode()
-        .put("title", "Some event")
-        .put("startTime", "2001-01-01T00:00:00")
-        .put("endTime", "2001-01-01T12:00:00")
+        .put("title", EventDefaults.TITLE)
+        .put("startTime", EventDefaults.START_TIME_STRING)
+        .put("endTime", EventDefaults.END_TIME_STRING)
         .toString();
 
     var result = webTestClient.post().uri("/api/v1/events")
@@ -77,12 +91,12 @@ class ApplicationTest {
         .exchange()
         .expectStatus().isCreated()
         .expectBody()
-        .jsonPath("$.title").isEqualTo("Some event")
-        .jsonPath("$.startTime").isEqualTo("2001-01-01T00:00:00")
-        .jsonPath("$.endTime").isEqualTo("2001-01-01T12:00:00")
+        .jsonPath("$.title").isEqualTo(EventDefaults.TITLE)
+        .jsonPath("$.startTime").isEqualTo(EventDefaults.START_TIME_STRING)
+        .jsonPath("$.endTime").isEqualTo(EventDefaults.END_TIME_STRING)
         .returnResult();
 
-    assertRepositoryCountIs(1);
+    assertEventRepositoryCountIs(1);
 
     try (InputStream stream = new ByteArrayInputStream(requireNonNull(result.getResponseBodyContent()))) {
       return UUID.fromString(JsonPath.read(stream, "$.id"));
@@ -94,16 +108,16 @@ class ApplicationTest {
   void step2_read_events() {
     logger.info("Starting step2: read events");
 
-    assertRepositoryCountIs(1);
+    assertEventRepositoryCountIs(1);
 
     webTestClient.get().uri("/api/v1/events")
         .exchange()
         .expectStatus().isOk()
         .expectBody()
         .jsonPath("$.content").isArray()
-        .jsonPath("$.content[0].title").isEqualTo("Some event")
-        .jsonPath("$.content[0].startTime").isEqualTo("2001-01-01T00:00:00")
-        .jsonPath("$.content[0].endTime").isEqualTo("2001-01-01T12:00:00");
+        .jsonPath("$.content[0].title").isEqualTo(EventDefaults.TITLE)
+        .jsonPath("$.content[0].startTime").isEqualTo(EventDefaults.START_TIME_STRING)
+        .jsonPath("$.content[0].endTime").isEqualTo(EventDefaults.END_TIME_STRING);
 
     logger.info("Ending step2: read events");
   }
@@ -111,12 +125,12 @@ class ApplicationTest {
   void step3_update_event(UUID id) {
     logger.info("Starting step3: update event");
 
-    assertRepositoryCountIs(1);
+    assertEventRepositoryCountIs(1);
 
     var payload = objectMapper.createObjectNode()
-        .put("title", "Some other event")
-        .put("startTime", "2001-01-01T01:00:00")
-        .put("endTime", "2001-01-01T13:00:00")
+        .put("title", EventDefaults.OTHER_TITLE)
+        .put("startTime", EventDefaults.OTHER_START_TIME_STRING)
+        .put("endTime", EventDefaults.OTHER_END_TIME_STRING)
         .toString();
 
     webTestClient.patch().uri("/api/v1/events/{id}", id)
@@ -125,9 +139,9 @@ class ApplicationTest {
         .exchange()
         .expectStatus().isOk()
         .expectBody()
-        .jsonPath("$.title").isEqualTo("Some other event")
-        .jsonPath("$.startTime").isEqualTo("2001-01-01T01:00:00")
-        .jsonPath("$.endTime").isEqualTo("2001-01-01T13:00:00");
+        .jsonPath("$.title").isEqualTo(EventDefaults.OTHER_TITLE)
+        .jsonPath("$.startTime").isEqualTo(EventDefaults.OTHER_START_TIME_STRING)
+        .jsonPath("$.endTime").isEqualTo(EventDefaults.OTHER_END_TIME_STRING);
 
     logger.info("Ending step3: update event");
   }
@@ -135,35 +149,189 @@ class ApplicationTest {
   void step4_read_event(UUID id) {
     logger.info("Starting step4: read event");
 
-    assertRepositoryCountIs(1);
+    assertEventRepositoryCountIs(1);
 
     webTestClient.get().uri("/api/v1/events/{id}", id)
         .exchange()
         .expectStatus().isOk()
         .expectBody()
-        .jsonPath("$.title").isEqualTo("Some other event")
-        .jsonPath("$.startTime").isEqualTo("2001-01-01T01:00:00")
-        .jsonPath("$.endTime").isEqualTo("2001-01-01T13:00:00");
+        .jsonPath("$.title").isEqualTo(EventDefaults.OTHER_TITLE)
+        .jsonPath("$.startTime").isEqualTo(EventDefaults.OTHER_START_TIME_STRING)
+        .jsonPath("$.endTime").isEqualTo(EventDefaults.OTHER_END_TIME_STRING);
 
     logger.info("Ending step4: read event");
   }
 
-  void step5_delete_event(UUID id) {
-    logger.info("Starting step5: delete event");
+  UUID step5_create_person() throws IOException {
+    logger.info("Starting step5: create person");
 
-    assertRepositoryCountIs(1);
+    assertPersonRepositoryCountIs(0);
+
+    var payload = objectMapper.createObjectNode()
+        .put("name", PersonDefaults.NAME)
+        .toString();
+
+    var result = webTestClient.post().uri("/api/v1/people")
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(payload)
+        .exchange()
+        .expectStatus().isCreated()
+        .expectBody()
+        .jsonPath("$.name").isEqualTo(PersonDefaults.NAME)
+        .returnResult();
+
+    assertPersonRepositoryCountIs(1);
+
+    try (InputStream stream = new ByteArrayInputStream(requireNonNull(result.getResponseBodyContent()))) {
+      return UUID.fromString(JsonPath.read(stream, "$.id"));
+    } finally {
+      logger.info("Ending step5: create person");
+    }
+  }
+
+  void step6_read_people() {
+    logger.info("Starting step6: read people");
+
+    assertPersonRepositoryCountIs(1);
+
+    webTestClient.get().uri("/api/v1/people")
+        .exchange()
+        .expectStatus().isOk()
+        .expectBody()
+        .jsonPath("$.content").isArray()
+        .jsonPath("$.content[0].name").isEqualTo(PersonDefaults.NAME);
+
+    logger.info("Ending step6: read people");
+  }
+
+  void step7_update_person(UUID id) {
+    logger.info("Starting step7: update person");
+
+    assertPersonRepositoryCountIs(1);
+
+    var payload = objectMapper.createObjectNode()
+        .put("name", PersonDefaults.OTHER_NAME)
+        .toString();
+
+    webTestClient.patch().uri("/api/v1/people/{id}", id)
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(payload)
+        .exchange()
+        .expectStatus().isOk()
+        .expectBody()
+        .jsonPath("$.name").isEqualTo(PersonDefaults.OTHER_NAME);
+
+    logger.info("Ending step7: update person");
+  }
+
+  void step8_read_person(UUID id) {
+    logger.info("Starting step8: read person");
+
+    assertPersonRepositoryCountIs(1);
+
+    webTestClient.get().uri("/api/v1/people/{id}", id)
+        .exchange()
+        .expectStatus().isOk()
+        .expectBody()
+        .jsonPath("$.name").isEqualTo(PersonDefaults.OTHER_NAME);
+
+    logger.info("Ending step8: read person");
+  }
+
+  void step9_update_event_participants(UUID eventId, UUID personId) {
+    logger.info("Starting step9: update event participants");
+
+    assertEventRepositoryCountIs(1);
+    assertPersonRepositoryCountIs(1);
+
+    var payload = objectMapper.createObjectNode()
+        .set("personIds", objectMapper.createArrayNode().add(personId.toString()));
+
+    webTestClient.put().uri("/api/v1/events/{id}/participants", eventId)
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(payload)
+        .exchange()
+        .expectStatus().isOk()
+        .expectBody()
+        .jsonPath("$").isArray()
+        .jsonPath("$[0].id").isEqualTo(personId.toString())
+        .jsonPath("$[0].name").isEqualTo(PersonDefaults.OTHER_NAME);
+
+    logger.info("Ending step9: update event participants");
+  }
+
+  void step10_read_event_participants(UUID eventId) {
+    logger.info("Starting step10: read event participants");
+
+    webTestClient.get().uri("/api/v1/events/{id}/participants", eventId)
+        .exchange()
+        .expectStatus().isOk()
+        .expectBody()
+        .jsonPath("$").isArray()
+        .jsonPath("$[0].id").isNotEmpty()
+        .jsonPath("$[0].name").isEqualTo(PersonDefaults.OTHER_NAME);
+
+    logger.info("Ending step10: read event participants");
+  }
+
+  void step11_update_event_participants_to_empty(UUID eventId) {
+    logger.info("Starting step11: update event participants to empty");
+
+    assertEventRepositoryCountIs(1);
+    assertPersonRepositoryCountIs(1);
+
+    var payload = objectMapper.createObjectNode()
+        .set("personIds", objectMapper.createArrayNode());
+
+    webTestClient.put().uri("/api/v1/events/{id}/participants", eventId)
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(payload)
+        .exchange()
+        .expectStatus().isOk()
+        .expectBody()
+        .jsonPath("$").isArray()
+        .jsonPath("$").isEmpty();
+
+    logger.info("Ending step11: update event participants to empty");
+  }
+
+  void step12_delete_person(UUID id) {
+    logger.info("Starting step12: delete person");
+
+    assertPersonRepositoryCountIs(1);
+
+    webTestClient.delete().uri("/api/v1/people/{id}", id)
+        .exchange()
+        .expectStatus().isOk();
+
+    assertPersonRepositoryCountIs(0);
+
+    logger.info("Ending step12: delete person");
+  }
+
+  void step13_delete_event(UUID id) {
+    logger.info("Starting step13: delete event");
+
+    assertEventRepositoryCountIs(1);
 
     webTestClient.delete().uri("/api/v1/events/{id}", id)
         .exchange()
         .expectStatus().isOk();
 
-    assertRepositoryCountIs(0);
+    assertEventRepositoryCountIs(0);
 
-    logger.info("Ending step5: delete event");
+    logger.info("Ending step13: delete event");
   }
 
-  private void assertRepositoryCountIs(long value) {
-    repository.count()
+  private void assertEventRepositoryCountIs(long value) {
+    eventRepository.count()
+        .as(StepVerifier::create)
+        .assertNext(count -> assertThat(count).isEqualTo(value))
+        .verifyComplete();
+  }
+
+  private void assertPersonRepositoryCountIs(long value) {
+    personRepository.count()
         .as(StepVerifier::create)
         .assertNext(count -> assertThat(count).isEqualTo(value))
         .verifyComplete();
