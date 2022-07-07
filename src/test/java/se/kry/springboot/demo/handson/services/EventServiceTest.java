@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
@@ -21,10 +22,13 @@ import reactor.test.StepVerifier;
 import se.kry.springboot.demo.handson.data.Event;
 import se.kry.springboot.demo.handson.data.EventRepository;
 import se.kry.springboot.demo.handson.data.ParticipantRepository;
+import se.kry.springboot.demo.handson.data.Person;
 import se.kry.springboot.demo.handson.data.PersonRepository;
 import se.kry.springboot.demo.handson.domain.EventCreationRequest;
 import se.kry.springboot.demo.handson.domain.EventDefaults;
+import se.kry.springboot.demo.handson.domain.EventParticipantsUpdateRequest;
 import se.kry.springboot.demo.handson.domain.EventUpdateRequest;
+import se.kry.springboot.demo.handson.domain.PersonDefaults;
 
 class EventServiceTest {
 
@@ -212,6 +216,35 @@ class EventServiceTest {
           assertThat(eventResponse.title()).isEqualTo(EventDefaults.OTHER_TITLE);
           assertThat(eventResponse.startTime()).isEqualTo(EventDefaults.OTHER_START_TIME);
           assertThat(eventResponse.endTime()).isEqualTo(EventDefaults.OTHER_END_TIME);
+        })
+        .verifyComplete();
+  }
+
+  @Test
+  void update_event_participants() {
+    var request = new EventParticipantsUpdateRequest(List.of(PersonDefaults.ID, PersonDefaults.OTHER_ID));
+
+    when(participantRepository.deleteAllByEventId(EventDefaults.ID)).thenReturn(Mono.empty());
+
+    when(participantRepository.saveAll(any(Flux.class))).thenAnswer(invocation ->
+        invocation.getArgument(0, Flux.class));
+
+    when(personRepository.findParticipantsByEventId(EventDefaults.ID)).thenReturn(
+        Flux.just(
+            new Person(PersonDefaults.ID, PersonDefaults.NAME,
+                PersonDefaults.CREATED_DATE, PersonDefaults.LAST_MODIFIED_DATE),
+            new Person(PersonDefaults.OTHER_ID, PersonDefaults.OTHER_NAME,
+                PersonDefaults.CREATED_DATE, PersonDefaults.LAST_MODIFIED_DATE)));
+
+    service.updateEventParticipants(EventDefaults.ID, request)
+        .as(StepVerifier::create)
+        .assertNext(personResponse -> {
+          assertThat(personResponse.id()).isEqualTo(PersonDefaults.ID);
+          assertThat(personResponse.name()).isEqualTo(PersonDefaults.NAME);
+        })
+        .assertNext(personResponse -> {
+          assertThat(personResponse.id()).isEqualTo(PersonDefaults.OTHER_ID);
+          assertThat(personResponse.name()).isEqualTo(PersonDefaults.OTHER_NAME);
         })
         .verifyComplete();
   }
