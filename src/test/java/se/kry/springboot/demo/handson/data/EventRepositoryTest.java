@@ -27,6 +27,7 @@ class EventRepositoryTest {
     template.insert(
             new Event(EventDefaults.ID, EventDefaults.TITLE,
                 EventDefaults.START_TIME, EventDefaults.END_TIME,
+                EventDefaults.PARTICIPANT_IDS,
                 EventDefaults.CREATED_DATE, EventDefaults.LAST_MODIFIED_DATE))
         .then(repository.findById(EventDefaults.ID))
         .as(StepVerifier::create).assertNext(actual -> {

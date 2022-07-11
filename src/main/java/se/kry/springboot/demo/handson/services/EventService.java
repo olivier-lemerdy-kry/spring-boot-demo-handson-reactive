@@ -2,6 +2,7 @@ package se.kry.springboot.demo.handson.services;
 
 import static se.kry.springboot.demo.handson.services.EventFunctions.newEventFromCreationRequest;
 import static se.kry.springboot.demo.handson.services.EventFunctions.updateEventFromUpdateRequest;
+import static se.kry.springboot.demo.handson.services.EventFunctions.updateEventParticipantsFromUpdateRequest;
 import static se.kry.springboot.demo.handson.util.MonoPreconditions.requireNonNull;
 
 import java.util.UUID;
@@ -13,9 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import se.kry.springboot.demo.handson.data.Event;
 import se.kry.springboot.demo.handson.data.EventRepository;
-import se.kry.springboot.demo.handson.data.Participant;
-import se.kry.springboot.demo.handson.data.ParticipantRepository;
 import se.kry.springboot.demo.handson.data.PersonRepository;
 import se.kry.springboot.demo.handson.domain.EventCreationRequest;
 import se.kry.springboot.demo.handson.domain.EventParticipantsUpdateRequest;
@@ -29,15 +29,11 @@ public class EventService {
 
   private final EventRepository eventRepository;
 
-  private final ParticipantRepository participantRepository;
-
   private final PersonRepository personRepository;
 
   public EventService(EventRepository eventRepository,
-                      ParticipantRepository participantRepository,
                       PersonRepository personRepository) {
     this.eventRepository = eventRepository;
-    this.participantRepository = participantRepository;
     this.personRepository = personRepository;
   }
 
@@ -64,7 +60,9 @@ public class EventService {
 
   public Flux<PersonResponse> getEventParticipants(@NotNull UUID id) {
     return FluxPreconditions.requireNonNull(id).flatMap(p ->
-        personRepository.findParticipantsByEventId(id)
+        eventRepository.findById(id)
+            .map(Event::participantIds)
+            .flatMapMany(personRepository::findAllById)
             .map(PersonFunctions::responseFromPerson));
   }
 
@@ -80,11 +78,12 @@ public class EventService {
   @Transactional
   public Flux<PersonResponse> updateEventParticipants(UUID eventId, EventParticipantsUpdateRequest request) {
     return FluxPreconditions.requireNonNull(eventId, request).flatMap(p ->
-        participantRepository.deleteAllByEventId(eventId)
-            .thenMany(participantRepository.saveAll(
-                Flux.fromStream(request.personIds().stream().map(personId -> Participant.from(eventId, personId)))))
-            .thenMany(personRepository.findParticipantsByEventId(eventId)
-                .map(PersonFunctions::responseFromPerson)));
+        eventRepository.findById(eventId)
+            .map(event -> updateEventParticipantsFromUpdateRequest(event, request))
+            .flatMap(eventRepository::save)
+            .map(Event::participantIds)
+            .flatMapMany(personRepository::findAllById)
+            .map(PersonFunctions::responseFromPerson));
   }
 
   @Transactional

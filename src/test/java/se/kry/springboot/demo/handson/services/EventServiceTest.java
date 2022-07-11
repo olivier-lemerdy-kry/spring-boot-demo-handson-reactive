@@ -21,7 +21,6 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import se.kry.springboot.demo.handson.data.Event;
 import se.kry.springboot.demo.handson.data.EventRepository;
-import se.kry.springboot.demo.handson.data.ParticipantRepository;
 import se.kry.springboot.demo.handson.data.Person;
 import se.kry.springboot.demo.handson.data.PersonRepository;
 import se.kry.springboot.demo.handson.domain.EventCreationRequest;
@@ -36,16 +35,13 @@ class EventServiceTest {
 
   private EventRepository eventRepository;
 
-  private ParticipantRepository participantRepository;
-
   private PersonRepository personRepository;
 
   @BeforeEach
   void setup() {
     eventRepository = mock(EventRepository.class);
-    participantRepository = mock(ParticipantRepository.class);
     personRepository = mock(PersonRepository.class);
-    service = new EventService(eventRepository, participantRepository, personRepository);
+    service = new EventService(eventRepository, personRepository);
   }
 
   @Test
@@ -69,7 +65,7 @@ class EventServiceTest {
       return Mono.just(
           new Event(
               inputEvent.id(), inputEvent.title(), inputEvent.startTime(), inputEvent.endTime(),
-              EventDefaults.CREATED_DATE, EventDefaults.LAST_MODIFIED_DATE));
+              EventDefaults.PARTICIPANT_IDS, EventDefaults.CREATED_DATE, EventDefaults.LAST_MODIFIED_DATE));
     });
 
     service.createEvent(creationRequest)
@@ -104,6 +100,7 @@ class EventServiceTest {
         .thenReturn(Mono.just(
             new Event(EventDefaults.ID, EventDefaults.TITLE,
                 EventDefaults.START_TIME, EventDefaults.END_TIME,
+                EventDefaults.PARTICIPANT_IDS,
                 EventDefaults.CREATED_DATE, EventDefaults.LAST_MODIFIED_DATE)));
 
     service.getEvent(EventDefaults.ID)
@@ -204,6 +201,7 @@ class EventServiceTest {
         new Event(
             EventDefaults.ID, EventDefaults.TITLE,
             EventDefaults.START_TIME, EventDefaults.END_TIME,
+            EventDefaults.PARTICIPANT_IDS,
             EventDefaults.CREATED_DATE, EventDefaults.LAST_MODIFIED_DATE)));
 
     when(eventRepository.save(any())).thenAnswer(invocation ->
@@ -222,19 +220,30 @@ class EventServiceTest {
 
   @Test
   void update_event_participants() {
-    var request = new EventParticipantsUpdateRequest(List.of(PersonDefaults.ID, PersonDefaults.OTHER_ID));
+    var participantIds = List.of(PersonDefaults.ID, PersonDefaults.OTHER_ID);
+    var request = new EventParticipantsUpdateRequest(participantIds);
 
-    when(participantRepository.deleteAllByEventId(EventDefaults.ID)).thenReturn(Mono.empty());
+    var initialEvent = new Event(
+        EventDefaults.ID, EventDefaults.TITLE,
+        EventDefaults.START_TIME, EventDefaults.END_TIME,
+        EventDefaults.PARTICIPANT_IDS,
+        EventDefaults.CREATED_DATE, EventDefaults.LAST_MODIFIED_DATE);
 
-    when(participantRepository.saveAll(any(Flux.class))).thenAnswer(invocation ->
-        invocation.getArgument(0, Flux.class));
+    when(eventRepository.findById(EventDefaults.ID)).thenReturn(Mono.just(initialEvent));
 
-    when(personRepository.findParticipantsByEventId(EventDefaults.ID)).thenReturn(
-        Flux.just(
-            new Person(PersonDefaults.ID, PersonDefaults.NAME,
-                PersonDefaults.CREATED_DATE, PersonDefaults.LAST_MODIFIED_DATE),
-            new Person(PersonDefaults.OTHER_ID, PersonDefaults.OTHER_NAME,
-                PersonDefaults.CREATED_DATE, PersonDefaults.LAST_MODIFIED_DATE)));
+    var updatedEvent = new Event(
+        EventDefaults.ID, EventDefaults.TITLE,
+        EventDefaults.START_TIME, EventDefaults.END_TIME,
+        participantIds,
+        EventDefaults.CREATED_DATE, EventDefaults.LAST_MODIFIED_DATE);
+
+    when(eventRepository.save(updatedEvent)).thenReturn(Mono.just(updatedEvent));
+
+    when(personRepository.findAllById(participantIds)).thenReturn(Flux.just(
+        new Person(PersonDefaults.ID, PersonDefaults.NAME, PersonDefaults.CREATED_DATE, PersonDefaults.LAST_MODIFIED_DATE),
+        new Person(PersonDefaults.OTHER_ID, PersonDefaults.OTHER_NAME, PersonDefaults.CREATED_DATE,
+            PersonDefaults.LAST_MODIFIED_DATE)
+    ));
 
     service.updateEventParticipants(EventDefaults.ID, request)
         .as(StepVerifier::create)

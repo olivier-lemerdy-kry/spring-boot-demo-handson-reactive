@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 public interface EventDefaults {
@@ -22,6 +24,8 @@ public interface EventDefaults {
   String END_TIME_STRING = "2001-01-01T13:00:00";
 
   LocalDateTime END_TIME = START_TIME.plusHours(1);
+
+  List<UUID> PARTICIPANT_IDS = Collections.emptyList();
 
   Instant CREATED_DATE = Instant.EPOCH;
 

@@ -6,14 +6,14 @@ import java.util.function.UnaryOperator;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.domain.Persistable;
-import org.springframework.data.relational.core.mapping.Table;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 import se.kry.springboot.demo.handson.domain.PersonConstants;
 
-@Table
-public record Person(@Id UUID id,
+@Document
+public record Person(@MongoId UUID id,
                      @NotBlank @Size(max = PersonConstants.Sizes.NAME) String name,
                      @CreatedDate Instant createdDate,
                      @LastModifiedDate Instant lastModifiedDate) implements Persistable<UUID> {
