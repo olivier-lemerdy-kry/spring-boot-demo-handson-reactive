@@ -2,7 +2,7 @@ package se.kry.springboot.demo.handson.services;
 
 import static se.kry.springboot.demo.handson.services.EventFunctions.newEventFromCreationRequest;
 import static se.kry.springboot.demo.handson.services.EventFunctions.updateEventFromUpdateRequest;
-import static se.kry.springboot.demo.handson.util.MonoPreconditions.requireNonNull;
+import static se.kry.springboot.demo.handson.util.ReactivePreconditions.requireNonNull;
 
 import java.util.UUID;
 import javax.validation.constraints.NotNull;
@@ -22,7 +22,6 @@ import se.kry.springboot.demo.handson.domain.EventParticipantsUpdateRequest;
 import se.kry.springboot.demo.handson.domain.EventResponse;
 import se.kry.springboot.demo.handson.domain.EventUpdateRequest;
 import se.kry.springboot.demo.handson.domain.PersonResponse;
-import se.kry.springboot.demo.handson.util.FluxPreconditions;
 
 @Service
 public class EventService {
@@ -63,7 +62,7 @@ public class EventService {
   }
 
   public Flux<PersonResponse> getEventParticipants(@NotNull UUID id) {
-    return FluxPreconditions.requireNonNull(id).flatMap(p ->
+    return requireNonNull(id).flatMapMany(p ->
         personRepository.findParticipantsByEventId(id)
             .map(PersonFunctions::responseFromPerson));
   }
@@ -79,7 +78,7 @@ public class EventService {
 
   @Transactional
   public Flux<PersonResponse> updateEventParticipants(UUID eventId, EventParticipantsUpdateRequest request) {
-    return FluxPreconditions.requireNonNull(eventId, request).flatMap(p ->
+    return requireNonNull(eventId, request).flatMapMany(p ->
         participantRepository.deleteAllByEventId(eventId)
             .thenMany(participantRepository.saveAll(
                 Flux.fromStream(request.personIds().stream().map(personId -> Participant.from(eventId, personId)))))

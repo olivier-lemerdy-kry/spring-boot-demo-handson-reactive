@@ -2,7 +2,7 @@ package se.kry.springboot.demo.handson.services;
 
 import static se.kry.springboot.demo.handson.services.PersonFunctions.newPersonFromCreationRequest;
 import static se.kry.springboot.demo.handson.services.PersonFunctions.updatePersonFromUpdateRequest;
-import static se.kry.springboot.demo.handson.util.MonoPreconditions.requireNonNull;
+import static se.kry.springboot.demo.handson.util.ReactivePreconditions.requireNonNull;
 
 import java.util.UUID;
 import javax.validation.constraints.NotNull;
