@@ -226,7 +226,7 @@ class EventServiceTest {
   void update_event_participants() {
     var request = new EventParticipantsUpdateRequest(List.of(PersonDefaults.ID, PersonDefaults.OTHER_ID));
 
-    when(participantRepository.deleteAllByEventId(EventDefaults.ID)).thenReturn(Completable.complete());
+    when(participantRepository.deleteAllByEventId(EventDefaults.ID)).thenReturn(Single.just(1L));
 
     when(participantRepository.saveAll(any(List.class))).thenAnswer(invocation ->
         Flowable.fromIterable(invocation.getArgument(0, List.class)));
@@ -240,12 +240,13 @@ class EventServiceTest {
 
     service.updateEventParticipants(EventDefaults.ID, request)
         .test()
-        .assertValue(personResponse -> {
+        .assertValueCount(2)
+        .assertValueAt(0, personResponse -> {
           assertThat(personResponse.id()).isEqualTo(PersonDefaults.ID);
           assertThat(personResponse.name()).isEqualTo(PersonDefaults.NAME);
           return true;
         })
-        .assertValue(personResponse -> {
+        .assertValueAt(1, personResponse -> {
           assertThat(personResponse.id()).isEqualTo(PersonDefaults.OTHER_ID);
           assertThat(personResponse.name()).isEqualTo(PersonDefaults.OTHER_NAME);
           return true;
