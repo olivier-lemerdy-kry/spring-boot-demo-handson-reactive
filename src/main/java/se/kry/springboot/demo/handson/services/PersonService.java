@@ -2,7 +2,7 @@ package se.kry.springboot.demo.handson.services;
 
 import static se.kry.springboot.demo.handson.services.PersonFunctions.newPersonFromCreationRequest;
 import static se.kry.springboot.demo.handson.services.PersonFunctions.updatePersonFromUpdateRequest;
-import static se.kry.springboot.demo.handson.util.SinglePreconditions.requireNonNull;
+import static se.kry.springboot.demo.handson.util.ReactivePreconditions.requireNonNull;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
@@ -18,8 +18,7 @@ import se.kry.springboot.demo.handson.data.PersonRepository;
 import se.kry.springboot.demo.handson.domain.PersonCreationRequest;
 import se.kry.springboot.demo.handson.domain.PersonResponse;
 import se.kry.springboot.demo.handson.domain.PersonUpdateRequest;
-import se.kry.springboot.demo.handson.util.MaybePreconditions;
-import se.kry.springboot.demo.handson.util.SinglePreconditions;
+import se.kry.springboot.demo.handson.util.ReactivePreconditions;
 
 @Service
 public class PersonService {
@@ -46,14 +45,14 @@ public class PersonService {
   }
 
   public Maybe<PersonResponse> getPerson(@NotNull UUID id) {
-    return MaybePreconditions.requireNonNull(id)
-        .flatMap(p -> repository.findById(id))
+    return requireNonNull(id)
+        .flatMapMaybe(p -> repository.findById(id))
         .map(PersonFunctions::responseFromPerson);
   }
 
   @Transactional
   public Maybe<PersonResponse> updatePerson(@NotNull UUID id, @NotNull PersonUpdateRequest personUpdateRequest) {
-    return MaybePreconditions.requireNonNull(id, personUpdateRequest).flatMap(p ->
+    return requireNonNull(id, personUpdateRequest).flatMapMaybe(p ->
         repository.findById(id)
             .map(person -> updatePersonFromUpdateRequest(person, personUpdateRequest))
             .flatMapSingle(repository::save)
@@ -62,6 +61,6 @@ public class PersonService {
 
   @Transactional
   public Completable deletePerson(@NotNull UUID id) {
-    return SinglePreconditions.requireNonNull(id).flatMapCompletable(p -> repository.deleteById(id));
+    return ReactivePreconditions.requireNonNull(id).flatMapCompletable(p -> repository.deleteById(id));
   }
 }
