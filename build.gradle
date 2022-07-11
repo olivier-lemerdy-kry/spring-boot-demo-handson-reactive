@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.spring.dependencies.management)
     id 'java'
+    id 'jacoco'
 }
 
 group = 'se.kry.springboot.demo.handson'
@@ -44,6 +45,11 @@ dependencyManagement {
     }
 }
 
-tasks.named('test') {
+test {
     useJUnitPlatform()
+    finalizedBy jacocoTestReport // report is always generated after tests run
+}
+
+jacocoTestReport {
+    dependsOn test // tests are required to run before generating the report
 }
