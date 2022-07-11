@@ -3,7 +3,7 @@ package se.kry.springboot.demo.handson.services;
 import static se.kry.springboot.demo.handson.services.EventFunctions.newEventFromCreationRequest;
 import static se.kry.springboot.demo.handson.services.EventFunctions.updateEventFromUpdateRequest;
 import static se.kry.springboot.demo.handson.services.EventFunctions.updateEventParticipantsFromUpdateRequest;
-import static se.kry.springboot.demo.handson.util.MonoPreconditions.requireNonNull;
+import static se.kry.springboot.demo.handson.util.ReactivePreconditions.requireNonNull;
 
 import java.util.UUID;
 import javax.validation.constraints.NotNull;
@@ -22,7 +22,6 @@ import se.kry.springboot.demo.handson.domain.EventParticipantsUpdateRequest;
 import se.kry.springboot.demo.handson.domain.EventResponse;
 import se.kry.springboot.demo.handson.domain.EventUpdateRequest;
 import se.kry.springboot.demo.handson.domain.PersonResponse;
-import se.kry.springboot.demo.handson.util.FluxPreconditions;
 
 @Service
 public class EventService {
@@ -59,7 +58,7 @@ public class EventService {
   }
 
   public Flux<PersonResponse> getEventParticipants(@NotNull UUID id) {
-    return FluxPreconditions.requireNonNull(id).flatMap(p ->
+    return requireNonNull(id).flatMapMany(p ->
         eventRepository.findById(id)
             .map(Event::participantIds)
             .flatMapMany(personRepository::findAllById)
@@ -77,7 +76,7 @@ public class EventService {
 
   @Transactional
   public Flux<PersonResponse> updateEventParticipants(UUID eventId, EventParticipantsUpdateRequest request) {
-    return FluxPreconditions.requireNonNull(eventId, request).flatMap(p ->
+    return requireNonNull(eventId, request).flatMapMany(p ->
         eventRepository.findById(eventId)
             .map(event -> updateEventParticipantsFromUpdateRequest(event, request))
             .flatMap(eventRepository::save)
