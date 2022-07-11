@@ -16,13 +16,13 @@ import se.kry.springboot.demo.handson.domain.EventConstants;
 
 @Table
 public record Event(@Id UUID id,
-                    @NotBlank @Size(max = EventConstants.SIZE_TITLE) String title,
+                    @NotBlank @Size(max = EventConstants.Sizes.TITLE) String title,
                     @NotNull LocalDateTime startTime,
                     @NotNull LocalDateTime endTime,
                     @CreatedDate Instant createdDate,
                     @LastModifiedDate Instant lastModifiedDate) implements Persistable<UUID> {
 
-  public static Event from(@NotBlank @Size(max = EventConstants.SIZE_TITLE) String title, @NotNull LocalDateTime start,
+  public static Event from(@NotBlank @Size(max = EventConstants.Sizes.TITLE) String title, @NotNull LocalDateTime start,
                            @NotNull LocalDateTime end) {
     return new Event(UUID.randomUUID(), title, start, end, null, null);
   }

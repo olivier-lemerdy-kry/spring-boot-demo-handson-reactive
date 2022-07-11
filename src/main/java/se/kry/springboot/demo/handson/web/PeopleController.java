@@ -1,4 +1,4 @@
-package se.kry.springboot.demo.handson.rest;
+package se.kry.springboot.demo.handson.web;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
@@ -16,53 +16,53 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
-import se.kry.springboot.demo.handson.domain.EventCreationRequest;
-import se.kry.springboot.demo.handson.domain.EventResponse;
-import se.kry.springboot.demo.handson.domain.EventUpdateRequest;
-import se.kry.springboot.demo.handson.services.EventService;
+import se.kry.springboot.demo.handson.domain.PersonCreationRequest;
+import se.kry.springboot.demo.handson.domain.PersonResponse;
+import se.kry.springboot.demo.handson.domain.PersonUpdateRequest;
+import se.kry.springboot.demo.handson.services.PersonService;
 
 @RestController
-@RequestMapping("/api/v1/events")
-public class EventsController {
+@RequestMapping("/api/v1/people")
+public class PeopleController {
 
-  private final EventService service;
+  private final PersonService service;
 
-  public EventsController(EventService service) {
+  public PeopleController(PersonService service) {
     this.service = service;
   }
 
   @PostMapping
-  Single<ResponseEntity<EventResponse>> createEvent(@Valid @RequestBody EventCreationRequest eventCreationRequest,
-                                                    UriComponentsBuilder builder) {
-    return service.createEvent(eventCreationRequest).map(response -> {
-      var location = builder.pathSegment("api", "v1", "events", "{id}").build(response.id());
+  Single<ResponseEntity<PersonResponse>> createPerson(@Valid @RequestBody PersonCreationRequest personCreationRequest,
+                                                      UriComponentsBuilder builder) {
+    return service.createPerson(personCreationRequest).map(response -> {
+      var location = builder.pathSegment("api", "v1", "people", "{id}").build(response.id());
       return ResponseEntity.created(location).body(response);
     });
   }
 
   @GetMapping
-  Single<Page<EventResponse>> readEvents(Pageable pageable) {
-    return service.getEvents(pageable);
+  Single<Page<PersonResponse>> readPeople(Pageable pageable) {
+    return service.getPeople(pageable);
   }
 
   @GetMapping("{id}")
-  Single<ResponseEntity<EventResponse>> readEvent(@PathVariable UUID id) {
-    return service.getEvent(id)
+  Single<ResponseEntity<PersonResponse>> readPerson(@PathVariable UUID id) {
+    return service.getPerson(id)
         .map(ResponseEntity::ok)
         .defaultIfEmpty(ResponseEntity.notFound().build());
   }
 
   @PatchMapping("{id}")
-  Single<ResponseEntity<EventResponse>> updateEvent(
+  Single<ResponseEntity<PersonResponse>> updatePerson(
       @PathVariable UUID id,
-      @Valid @RequestBody EventUpdateRequest eventUpdateRequest) {
-    return service.updateEvent(id, eventUpdateRequest)
+      @Valid @RequestBody PersonUpdateRequest request) {
+    return service.updatePerson(id, request)
         .map(ResponseEntity::ok)
         .defaultIfEmpty(ResponseEntity.notFound().build());
   }
 
   @DeleteMapping("{id}")
-  Completable deleteEvent(@PathVariable UUID id) {
-    return service.deleteEvent(id);
+  Completable deletePerson(@PathVariable UUID id) {
+    return service.deletePerson(id);
   }
 }
