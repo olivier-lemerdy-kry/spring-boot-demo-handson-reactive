@@ -84,9 +84,9 @@ public class EventService {
   public Flowable<PersonResponse> updateEventParticipants(UUID eventId, EventParticipantsUpdateRequest request) {
     return FlowablePreconditions.requireNonNull(eventId, request).flatMap(p ->
         participantRepository.deleteAllByEventId(eventId)
-            .andThen(participantRepository.saveAll(
+            .ignoreElement().andThen(participantRepository.saveAll(
                 Flowable.fromStream(request.personIds().stream().map(personId -> Participant.from(eventId, personId)))))
-            .flatMap(q -> personRepository.findParticipantsByEventId(eventId)
+            .ignoreElements().andThen(personRepository.findParticipantsByEventId(eventId)
                 .map(PersonFunctions::responseFromPerson)));
   }
 
