@@ -2,7 +2,7 @@ package se.kry.springboot.demo.handson.services;
 
 import static se.kry.springboot.demo.handson.services.EventFunctions.newEventFromCreationRequest;
 import static se.kry.springboot.demo.handson.services.EventFunctions.updateEventFromUpdateRequest;
-import static se.kry.springboot.demo.handson.util.SinglePreconditions.requireNonNull;
+import static se.kry.springboot.demo.handson.util.ReactivePreconditions.requireNonNull;
 
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
@@ -24,9 +24,6 @@ import se.kry.springboot.demo.handson.domain.EventParticipantsUpdateRequest;
 import se.kry.springboot.demo.handson.domain.EventResponse;
 import se.kry.springboot.demo.handson.domain.EventUpdateRequest;
 import se.kry.springboot.demo.handson.domain.PersonResponse;
-import se.kry.springboot.demo.handson.util.FlowablePreconditions;
-import se.kry.springboot.demo.handson.util.MaybePreconditions;
-import se.kry.springboot.demo.handson.util.SinglePreconditions;
 
 @Service
 public class EventService {
@@ -47,13 +44,13 @@ public class EventService {
 
   @Transactional
   public Single<EventResponse> createEvent(@NotNull EventCreationRequest eventCreationRequest) {
-    return SinglePreconditions.requireNonNull(eventCreationRequest).flatMap(p ->
+    return requireNonNull(eventCreationRequest).flatMap(p ->
         eventRepository.save(newEventFromCreationRequest(eventCreationRequest))
             .map(EventFunctions::responseFromEvent));
   }
 
   public Single<Page<EventResponse>> getEvents(@NotNull Pageable pageable) {
-    return SinglePreconditions.requireNonNull(pageable).flatMap(p ->
+    return requireNonNull(pageable).flatMap(p ->
         Single.zip(
             eventRepository.count(),
             eventRepository.findBy(pageable).toList(),
@@ -61,20 +58,20 @@ public class EventService {
   }
 
   public Maybe<EventResponse> getEvent(@NotNull UUID id) {
-    return MaybePreconditions.requireNonNull(id)
-        .flatMap(p -> eventRepository.findById(id))
+    return requireNonNull(id)
+        .flatMapMaybe(p -> eventRepository.findById(id))
         .map(EventFunctions::responseFromEvent);
   }
 
   public Flowable<PersonResponse> getEventParticipants(@NotNull UUID id) {
-    return FlowablePreconditions.requireNonNull(id).flatMap(p ->
+    return requireNonNull(id).flatMapPublisher(p ->
         personRepository.findParticipantsByEventId(id)
             .map(PersonFunctions::responseFromPerson));
   }
 
   @Transactional
   public Maybe<EventResponse> updateEvent(@NotNull UUID id, @NotNull EventUpdateRequest eventUpdateRequest) {
-    return MaybePreconditions.requireNonNull(id, eventUpdateRequest).flatMap(p ->
+    return requireNonNull(id, eventUpdateRequest).flatMapMaybe(p ->
         eventRepository.findById(id)
             .map(event -> updateEventFromUpdateRequest(event, eventUpdateRequest))
             .flatMapSingleElement(eventRepository::save)
@@ -83,7 +80,7 @@ public class EventService {
 
   @Transactional
   public Flowable<PersonResponse> updateEventParticipants(UUID eventId, EventParticipantsUpdateRequest request) {
-    return FlowablePreconditions.requireNonNull(eventId, request).flatMap(p ->
+    return requireNonNull(eventId, request).flatMapPublisher(p ->
         participantRepository.deleteAllByEventId(eventId)
             .ignoreElement().andThen(participantRepository.saveAll(
                 request.personIds().stream().map(personId -> Participant.from(eventId, personId)).toList()))

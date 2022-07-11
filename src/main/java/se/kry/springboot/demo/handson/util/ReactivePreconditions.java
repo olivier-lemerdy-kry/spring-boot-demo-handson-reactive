@@ -5,7 +5,7 @@ import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
-public enum SinglePreconditions {
+public enum ReactivePreconditions {
   ;
 
   public static <T> Single<T> requireNonNull(T object) {

@@ -1,14 +1,14 @@
 package se.kry.springboot.demo.handson.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static se.kry.springboot.demo.handson.util.SinglePreconditions.requireNonNull;
+import static se.kry.springboot.demo.handson.util.ReactivePreconditions.requireNonNull;
 
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class SinglePreconditionsTest {
+class ReactivePreconditionsTest {
 
   static Stream<String[]> require_non_null_invalid_tuple2_arguments() {
     return Stream.of(
