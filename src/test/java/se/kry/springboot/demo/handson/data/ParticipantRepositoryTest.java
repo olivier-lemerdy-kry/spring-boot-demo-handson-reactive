@@ -46,7 +46,6 @@ class ParticipantRepositoryTest {
           assertThat(participant.eventId()).isEqualTo(eventId);
           assertThat(participant.personId()).isEqualTo(personId);
         }).verifyComplete();
-    ;
   }
 
   @Test
