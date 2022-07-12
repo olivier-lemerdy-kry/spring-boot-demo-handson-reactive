@@ -3,9 +3,6 @@ package se.kry.springboot.demo.handson.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.Month;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,29 +31,29 @@ class EventUpdateRequestJsonTest {
 
     var jsonContent = jacksonTester.write(eventUpdateRequest);
 
-    assertThat(jsonContent).hasEmptyJsonPathValue("$.title").hasEmptyJsonPathValue("$.startTime").hasEmptyJsonPathValue("$.endTime");
+    assertThat(jsonContent)
+        .hasEmptyJsonPathValue("$.title")
+        .hasEmptyJsonPathValue("$.startTime")
+        .hasEmptyJsonPathValue("$.endTime");
   }
 
   @Test
   void deserialize() throws IOException {
-    var start = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT).plusHours(1);
-    var end = start.plusHours(12);
-
     var eventUpdateRequest = jacksonTester.readObject("EventUpdateRequest.json");
 
     assertThat(eventUpdateRequest).isNotNull();
-    assertThat(eventUpdateRequest.title()).hasValue("Some other event");
-    assertThat(eventUpdateRequest.startTime()).hasValue(start);
-    assertThat(eventUpdateRequest.endTime()).hasValue(end);
+    assertThat(eventUpdateRequest.title()).hasValue(EventDefaults.OTHER_TITLE);
+    assertThat(eventUpdateRequest.startTime()).hasValue(EventDefaults.OTHER_START_TIME);
+    assertThat(eventUpdateRequest.endTime()).hasValue(EventDefaults.OTHER_END_TIME);
   }
 
   @Test
   void serialize() throws IOException {
-    var start = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT).plusHours(1);
-    var end = start.plusHours(12);
-
     var jsonContent = jacksonTester.write(
-        new EventUpdateRequest(Optional.of("Some other event"), Optional.of(start), Optional.of(end)));
+        new EventUpdateRequest(
+            Optional.of(EventDefaults.OTHER_TITLE),
+            Optional.of(EventDefaults.OTHER_START_TIME),
+            Optional.of(EventDefaults.OTHER_END_TIME)));
 
     assertThat(jsonContent).isEqualToJson("EventUpdateRequest.json");
   }

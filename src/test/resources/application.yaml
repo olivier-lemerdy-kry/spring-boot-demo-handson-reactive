@@ -1,0 +1,5 @@
+debug: true
+logging:
+  level:
+    io.r2dbc.h2: TRACE
+    org.springframework.data.r2dbc: DEBUG
