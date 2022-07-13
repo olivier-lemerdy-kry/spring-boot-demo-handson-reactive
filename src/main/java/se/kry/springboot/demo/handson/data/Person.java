@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -19,7 +20,12 @@ public record Person(@Id UUID id,
                      @LastModifiedDate Instant lastModifiedDate) implements Persistable<UUID> {
 
   public static Person from(@NotBlank @Size(max = PersonConstants.Sizes.NAME) String name) {
-    return new Person(UUID.randomUUID(), name, null, null);
+    return Person.from(UUID.randomUUID(), name);
+  }
+
+  public static Person from(@NotNull UUID id,
+                            @NotBlank @Size(max = PersonConstants.Sizes.NAME) String name) {
+    return new Person(id, name, null, null);
   }
 
   @Override
