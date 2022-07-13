@@ -11,9 +11,11 @@ on:
   push:
     branches:
       - main
+      - flyway
       - rxjava
       - rxjava3
       - mongo
+      - neo4j
   pull_request:
     branches: [ main ]
 

@@ -2,7 +2,7 @@ package se.kry.springboot.demo.handson.data;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.Duration;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
@@ -47,19 +47,22 @@ class PersonRepositoryTest {
 
   @Test
   void find_participants_by_event_id() {
-    var timeout = Duration.ofSeconds(2);
-    var event = template.insert(Event.from(
-            EventDefaults.TITLE, EventDefaults.START_TIME, EventDefaults.END_TIME))
-        .block(timeout);
-    var person = template.insert(Person.from(PersonDefaults.NAME))
-        .block(timeout);
-    template.insert(Participant.from(event.id(), person.id()))
-        .block(timeout);
+    // Given
+    var eventId = UUID.randomUUID();
+    var personId = UUID.randomUUID();
 
-    repository.findParticipantsByEventId(event.id())
+    template.insert(
+            Event.from(eventId, EventDefaults.TITLE, EventDefaults.START_TIME, EventDefaults.END_TIME))
+        .then(template.insert(Person.from(personId, PersonDefaults.NAME)))
+        .then(template.insert(Participant.from(eventId, personId)))
+
+        // When
+        .thenMany(repository.findParticipantsByEventId(eventId))
+
+        // Then
         .as(StepVerifier::create)
         .assertNext(participant -> {
-          assertThat(participant.id()).isEqualTo(person.id());
+          assertThat(participant.id()).isEqualTo(personId);
           assertThat(participant.name()).isEqualTo(PersonDefaults.NAME);
         }).verifyComplete();
   }
