@@ -27,9 +27,17 @@ public record Event(@MongoId UUID id,
                     @CreatedDate Instant createdDate,
                     @LastModifiedDate Instant lastModifiedDate) implements Persistable<UUID> {
 
-  public static Event from(@NotBlank @Size(max = EventConstants.Sizes.TITLE) String title, @NotNull LocalDateTime start,
+  public static Event from(@NotBlank @Size(max = EventConstants.Sizes.TITLE) String title,
+                           @NotNull LocalDateTime start,
                            @NotNull LocalDateTime end) {
-    return new Event(UUID.randomUUID(), title, start, end, emptyList(), null, null);
+    return Event.from(UUID.randomUUID(), title, start, end);
+  }
+
+  public static Event from(@NotNull UUID id,
+                           @NotBlank @Size(max = EventConstants.Sizes.TITLE) String title,
+                           @NotNull LocalDateTime start,
+                           @NotNull LocalDateTime end) {
+    return new Event(id, title, start, end, emptyList(), null, null);
   }
 
   @Override
