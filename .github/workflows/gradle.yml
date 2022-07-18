@@ -9,7 +9,13 @@ name: Java CI with Gradle
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - flyway
+      - rxjava
+      - rxjava3
+      - mongo
+      - neo4j
   pull_request:
     branches: [ main ]
 

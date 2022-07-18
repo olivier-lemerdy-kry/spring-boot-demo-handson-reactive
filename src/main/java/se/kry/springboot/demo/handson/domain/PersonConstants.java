@@ -1,7 +1,7 @@
 package se.kry.springboot.demo.handson.domain;
 
-public interface EventConstants {
+public interface PersonConstants {
   interface Sizes {
-    int TITLE = 256;
+    int NAME = 256;
   }
 }

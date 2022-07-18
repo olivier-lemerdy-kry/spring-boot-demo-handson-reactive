@@ -3,10 +3,6 @@ package se.kry.springboot.demo.handson.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.Month;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.json.JsonTest;
@@ -20,11 +16,8 @@ class EventResponseJsonTest {
 
   @Test
   void serialize() throws IOException {
-    var uuid = UUID.fromString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
-    var start = LocalDate.of(2001, Month.JANUARY, 1).atTime(LocalTime.MIDNIGHT);
-    var end = start.plusHours(12);
-
-    var jsonContent = jacksonTester.write(new EventResponse(uuid, "Some event", start, end));
+    var jsonContent = jacksonTester.write(
+        new EventResponse(EventDefaults.ID, EventDefaults.TITLE, EventDefaults.START_TIME, EventDefaults.END_TIME));
 
     assertThat(jsonContent).isEqualToJson("EventResponse.json");
   }
@@ -34,10 +27,10 @@ class EventResponseJsonTest {
     var event = jacksonTester.readObject("EventResponse.json");
 
     assertThat(event).isNotNull();
-    assertThat(event.id()).hasToString("38a14a82-d5a2-4210-9d61-cc3577bfa5df");
-    assertThat(event.title()).isEqualTo("Some event");
-    assertThat(event.startTime()).hasToString("2001-01-01T00:00");
-    assertThat(event.endTime()).hasToString("2001-01-01T12:00");
+    assertThat(event.id()).isEqualTo(EventDefaults.ID);
+    assertThat(event.title()).isEqualTo(EventDefaults.TITLE);
+    assertThat(event.startTime()).isEqualTo(EventDefaults.START_TIME);
+    assertThat(event.endTime()).isEqualTo(EventDefaults.END_TIME);
   }
 
 }
