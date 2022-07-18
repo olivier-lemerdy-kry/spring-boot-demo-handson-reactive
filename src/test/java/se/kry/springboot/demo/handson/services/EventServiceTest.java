@@ -221,14 +221,37 @@ class EventServiceTest {
 
   @Test
   void update_event_participants() {
-    var request = new EventParticipantsUpdateRequest(List.of(PersonDefaults.ID, PersonDefaults.OTHER_ID));
+    var participantIds = List.of(PersonDefaults.ID, PersonDefaults.OTHER_ID);
+    var request = new EventParticipantsUpdateRequest(participantIds);
 
-    when(personRepository.findParticipantsByEventId(EventDefaults.ID)).thenReturn(
-        Flux.just(
-            new Person(PersonDefaults.ID, PersonDefaults.NAME,
-                PersonDefaults.CREATED_DATE, PersonDefaults.LAST_MODIFIED_DATE),
-            new Person(PersonDefaults.OTHER_ID, PersonDefaults.OTHER_NAME,
-                PersonDefaults.CREATED_DATE, PersonDefaults.LAST_MODIFIED_DATE)));
+    var initialEvent = new Event(
+        EventDefaults.ID, EventDefaults.TITLE,
+        EventDefaults.START_TIME, EventDefaults.END_TIME,
+        emptyList(),
+        EventDefaults.CREATED_DATE, EventDefaults.LAST_MODIFIED_DATE);
+
+    when(eventRepository.findById(EventDefaults.ID)).thenReturn(Mono.just(initialEvent));
+
+    var participants = List.of(
+        new Person(PersonDefaults.ID, PersonDefaults.NAME,
+            PersonDefaults.CREATED_DATE, PersonDefaults.LAST_MODIFIED_DATE),
+        new Person(PersonDefaults.OTHER_ID, PersonDefaults.OTHER_NAME,
+            PersonDefaults.CREATED_DATE, PersonDefaults.LAST_MODIFIED_DATE));
+
+    when(personRepository.findAllById(participantIds))
+        .thenReturn(Flux.fromIterable(participants));
+
+    var updatedEvent = new Event(
+        EventDefaults.ID, EventDefaults.TITLE,
+        EventDefaults.START_TIME, EventDefaults.END_TIME,
+        participants,
+        EventDefaults.CREATED_DATE, EventDefaults.LAST_MODIFIED_DATE);
+
+    when(eventRepository.save(updatedEvent))
+        .thenReturn(Mono.just(updatedEvent));
+
+    when(personRepository.findParticipantsByEventId(EventDefaults.ID))
+        .thenReturn(Flux.fromIterable(participants));
 
     service.updateEventParticipants(EventDefaults.ID, request)
         .as(StepVerifier::create)

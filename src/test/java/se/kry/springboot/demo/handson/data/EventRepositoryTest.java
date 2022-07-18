@@ -7,8 +7,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.neo4j.DataNeo4jTest;
-import org.springframework.dao.UncategorizedDataAccessException;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.neo4j.core.ReactiveNeo4jTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -20,7 +19,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import se.kry.springboot.demo.handson.domain.EventDefaults;
 
-@DataNeo4jTest
+@SpringBootTest // https://github.com/spring-projects/spring-boot/issues/23630
 @Testcontainers
 class EventRepositoryTest {
 
@@ -42,12 +41,17 @@ class EventRepositoryTest {
 
   @Test
   void get_event() {
+    // Given
     template.save(
             new Event(EventDefaults.ID, EventDefaults.TITLE,
                 EventDefaults.START_TIME, EventDefaults.END_TIME,
                 emptyList(),
                 EventDefaults.CREATED_DATE, EventDefaults.LAST_MODIFIED_DATE))
+
+        // When
         .then(repository.findById(EventDefaults.ID))
+
+        // Then
         .as(StepVerifier::create).assertNext(actual -> {
           assertThat(actual.id()).isEqualTo(EventDefaults.ID);
           assertThat(actual.title()).isEqualTo(EventDefaults.TITLE);
@@ -58,6 +62,8 @@ class EventRepositoryTest {
 
   @Test
   void get_events() {
+
+    // Given
     var saves = IntStream.range(0, 50)
         .mapToObj(i -> Event.from("Event" + i,
             EventDefaults.START_TIME.plusDays(i),
@@ -66,7 +72,11 @@ class EventRepositoryTest {
         .collect(Collectors.toList());
 
     Mono.when(saves)
+
+        // When
         .then(repository.findBy(Pageable.ofSize(20)).collectList())
+
+        // Then
         .as(StepVerifier::create)
         .assertNext(events ->
             assertThat(events).hasSize(20)
@@ -75,8 +85,14 @@ class EventRepositoryTest {
 
   @Test
   void save_event() {
+
+    // Given
     var event = Event.from(EventDefaults.TITLE, EventDefaults.START_TIME, EventDefaults.END_TIME);
+
+    // When
     repository.save(event)
+
+        // Then
         .as(StepVerifier::create)
         .assertNext(actual -> {
           assertThat(actual).isNotNull();
@@ -85,19 +101,6 @@ class EventRepositoryTest {
           assertThat(actual.startTime()).hasToString("2001-01-01T12:00");
           assertThat(actual.endTime()).hasToString("2001-01-01T13:00");
         }).verifyComplete();
-  }
-
-  @Test
-  void save_event_with_too_long_title() {
-    var title = "X".repeat(300);
-
-    repository.save(Event.from(title, EventDefaults.START_TIME, EventDefaults.END_TIME))
-        .as(StepVerifier::create)
-        .expectErrorSatisfies(exception ->
-            assertThat(exception)
-                .isInstanceOf(UncategorizedDataAccessException.class)
-                .hasMessageContaining("\"TITLE CHARACTER VARYING(256)\": \"SPACE(300")
-        ).verify();
   }
 
 }

@@ -41,7 +41,15 @@ public record Event(@Id UUID id,
                            @NotBlank @Size(max = EventConstants.Sizes.TITLE) String title,
                            @NotNull LocalDateTime start,
                            @NotNull LocalDateTime end) {
-    return new Event(id, title, start, end, emptyList(), null, null);
+    return Event.from(id, title, start, end, emptyList());
+  }
+
+  public static Event from(@NotNull UUID id,
+                           @NotBlank @Size(max = EventConstants.Sizes.TITLE) String title,
+                           @NotNull LocalDateTime start,
+                           @NotNull LocalDateTime end,
+                           @NotNull List<Person> participants) {
+    return new Event(id, title, start, end, participants, null, null);
   }
 
   @Override

@@ -72,9 +72,17 @@ public class EventService {
 
   @Transactional
   public Flux<PersonResponse> updateEventParticipants(UUID eventId, EventParticipantsUpdateRequest request) {
-    return requireNonNull(eventId, request).flatMapMany(p ->
-        personRepository.findParticipantsByEventId(eventId)
-            .map(PersonFunctions::responseFromPerson));
+    return requireNonNull(eventId, request).flatMap(p ->
+            Mono.zip(
+                eventRepository.findById(eventId),
+                personRepository.findAllById(request.personIds()).collectList()))
+        .map(tuple -> {
+          var event = tuple.getT1();
+          var people = tuple.getT2();
+          return event.copy(participants -> people);
+        }).flatMap(eventRepository::save)
+        .thenMany(personRepository.findParticipantsByEventId(eventId))
+        .map(PersonFunctions::responseFromPerson);
   }
 
   @Transactional

@@ -10,6 +10,6 @@ public interface PersonRepository extends ReactiveNeo4jRepository<Person, UUID> 
 
   Flux<Person> findBy(Pageable pageable);
 
-  @Query("MATCH (p:Person)-[r]->(e:Event) WHERE e.id=$eventId RETURN p")
+  @Query("MATCH (p:Person)-[:PARTICIPATES]->(e:Event) WHERE e.id=$eventId RETURN p")
   Flux<Person> findParticipantsByEventId(UUID eventId);
 }

@@ -1,12 +1,12 @@
 package se.kry.springboot.demo.handson.data;
 
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.neo4j.DataNeo4jTest;
-import org.springframework.dao.UncategorizedDataAccessException;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.neo4j.core.ReactiveNeo4jTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -17,7 +17,7 @@ import reactor.test.StepVerifier;
 import se.kry.springboot.demo.handson.domain.EventDefaults;
 import se.kry.springboot.demo.handson.domain.PersonDefaults;
 
-@DataNeo4jTest
+@SpringBootTest // https://github.com/spring-projects/spring-boot/issues/23630
 @Testcontainers
 class PersonRepositoryTest {
 
@@ -49,27 +49,15 @@ class PersonRepositoryTest {
   }
 
   @Test
-  void save_person_with_too_long_name() {
-    var name = "X".repeat(300);
-
-    repository.save(Person.from(name))
-        .as(StepVerifier::create)
-        .expectErrorSatisfies(exception ->
-            assertThat(exception)
-                .isInstanceOf(UncategorizedDataAccessException.class)
-                .hasMessageContaining("\"NAME CHARACTER VARYING(256)\": \"SPACE(300")
-        ).verify();
-  }
-
-  @Test
   void find_participants_by_event_id() {
     // Given
     var eventId = UUID.randomUUID();
     var personId = UUID.randomUUID();
 
-    template.save(
-            Event.from(eventId, EventDefaults.TITLE, EventDefaults.START_TIME, EventDefaults.END_TIME))
-        .then(template.save(Person.from(personId, PersonDefaults.NAME)))
+    template.save(Person.from(personId, PersonDefaults.NAME)).flatMap(person ->
+            template.save(
+                Event.from(eventId, EventDefaults.TITLE, EventDefaults.START_TIME, EventDefaults.END_TIME,
+                    singletonList(person))))
 
         // When
         .thenMany(repository.findParticipantsByEventId(eventId))
