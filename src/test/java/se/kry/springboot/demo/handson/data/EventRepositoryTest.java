@@ -40,7 +40,8 @@ class EventRepositoryTest {
   }
 
   @Test
-  void get_event() {
+  void find_event_by_id() {
+
     // Given
     template.save(
             new Event(EventDefaults.ID, EventDefaults.TITLE,
@@ -61,7 +62,7 @@ class EventRepositoryTest {
   }
 
   @Test
-  void get_events() {
+  void find_all_events_by_pageable() {
 
     // Given
     var saves = IntStream.range(0, 50)
@@ -69,7 +70,7 @@ class EventRepositoryTest {
             EventDefaults.START_TIME.plusDays(i),
             EventDefaults.START_TIME.plusDays(i).plusHours(1)))
         .map(template::save)
-        .collect(Collectors.toList());
+        .toList();
 
     Mono.when(saves)
 
