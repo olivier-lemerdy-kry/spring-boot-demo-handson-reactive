@@ -24,13 +24,19 @@ class EventRepositoryTest {
   private EventRepository repository;
 
   @Test
-  void get_event() {
+  void find_event_by_id() {
+
+    // Given
     monoToCompletable(
-        template.insert(
+    template.insert(
             new Event(EventDefaults.ID, EventDefaults.TITLE,
                 EventDefaults.START_TIME, EventDefaults.END_TIME,
                 EventDefaults.CREATED_DATE, EventDefaults.LAST_MODIFIED_DATE)))
+
+        // When
         .andThen(repository.findById(EventDefaults.ID))
+
+        // Then
         .test()
         .assertValue(actual -> {
           assertThat(actual.id()).isEqualTo(EventDefaults.ID);
@@ -42,7 +48,9 @@ class EventRepositoryTest {
   }
 
   @Test
-  void get_events() {
+  void find_all_events_by_pageable() {
+
+    // Given
     var inserts = IntStream.range(0, 50)
         .mapToObj(i -> Event.from("Event" + i,
             EventDefaults.START_TIME.plusDays(i),
@@ -51,8 +59,11 @@ class EventRepositoryTest {
         .collect(Collectors.toList());
     Mono.when(inserts).block();
 
+    // When
     repository.findBy(Pageable.ofSize(20))
         .toList()
+
+        // Then
         .test()
         .assertValue(events -> {
           assertThat(events).hasSize(20);
@@ -62,8 +73,14 @@ class EventRepositoryTest {
 
   @Test
   void save_event() {
+
+    // Given
     var event = Event.from(EventDefaults.TITLE, EventDefaults.START_TIME, EventDefaults.END_TIME);
+
+    // When
     repository.save(event)
+
+        // Then
         .test()
         .assertValue(actual -> {
           assertThat(actual).isNotNull();
