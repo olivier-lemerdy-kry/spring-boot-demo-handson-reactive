@@ -24,12 +24,18 @@ class EventRepositoryTest {
   private EventRepository repository;
 
   @Test
-  void get_event() {
+  void find_event_by_id() {
+
+    // Given
     template.insert(
             new Event(EventDefaults.ID, EventDefaults.TITLE,
                 EventDefaults.START_TIME, EventDefaults.END_TIME,
                 EventDefaults.CREATED_DATE, EventDefaults.LAST_MODIFIED_DATE))
+
+        // When
         .then(repository.findById(EventDefaults.ID))
+
+        // Then
         .as(StepVerifier::create).assertNext(actual -> {
           assertThat(actual.id()).isEqualTo(EventDefaults.ID);
           assertThat(actual.title()).isEqualTo(EventDefaults.TITLE);
@@ -39,7 +45,9 @@ class EventRepositoryTest {
   }
 
   @Test
-  void get_events() {
+  void find_all_events_by_pageable() {
+
+    // Given
     var inserts = IntStream.range(0, 50)
         .mapToObj(i -> Event.from("Event" + i,
             EventDefaults.START_TIME.plusDays(i),
@@ -48,7 +56,11 @@ class EventRepositoryTest {
         .collect(Collectors.toList());
 
     Mono.when(inserts)
+
+        // When
         .then(repository.findBy(Pageable.ofSize(20)).collectList())
+
+        // Then
         .as(StepVerifier::create)
         .assertNext(events ->
             assertThat(events).hasSize(20)
@@ -57,8 +69,14 @@ class EventRepositoryTest {
 
   @Test
   void save_event() {
+
+    // Given
     var event = Event.from(EventDefaults.TITLE, EventDefaults.START_TIME, EventDefaults.END_TIME);
+
+    // When
     repository.save(event)
+
+        // Then
         .as(StepVerifier::create)
         .assertNext(actual -> {
           assertThat(actual).isNotNull();
