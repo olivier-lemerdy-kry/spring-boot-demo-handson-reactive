@@ -9,9 +9,11 @@ import org.springframework.data.auditing.DateTimeProvider;
 @Configuration
 public class InfraDataConfiguration {
 
-  public static final String DATE_TIME_PROVIDER_NAME = "dateTimeProvider";
+  public interface BeanNames {
+    String DATE_TIME_PROVIDER_NAME = "dateTimeProvider"
+  }
 
-  @Bean(name = DATE_TIME_PROVIDER_NAME)
+  @Bean(name = BeanNames.DATE_TIME_PROVIDER_NAME)
   DateTimeProvider dateTimeProvider(Clock clock) {
     return () -> Optional.of(clock.instant());
   }

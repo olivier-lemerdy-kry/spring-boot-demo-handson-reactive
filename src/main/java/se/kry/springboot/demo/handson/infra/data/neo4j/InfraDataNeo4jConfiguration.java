@@ -11,7 +11,7 @@ import org.springframework.transaction.ReactiveTransactionManager;
 import se.kry.springboot.demo.handson.infra.data.InfraDataConfiguration;
 
 @Configuration
-@EnableReactiveNeo4jAuditing(dateTimeProviderRef = InfraDataConfiguration.DATE_TIME_PROVIDER_NAME)
+@EnableReactiveNeo4jAuditing(dateTimeProviderRef = InfraDataConfiguration.BeanNames.DATE_TIME_PROVIDER_NAME)
 public class InfraDataNeo4jConfiguration {
 
   @Bean(ReactiveNeo4jRepositoryConfigurationExtension.DEFAULT_TRANSACTION_MANAGER_BEAN_NAME)
