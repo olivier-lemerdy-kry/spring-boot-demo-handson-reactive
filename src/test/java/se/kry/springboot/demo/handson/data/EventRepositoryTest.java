@@ -2,7 +2,6 @@ package se.kry.springboot.demo.handson.data;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +52,7 @@ class EventRepositoryTest {
             EventDefaults.START_TIME.plusDays(i),
             EventDefaults.START_TIME.plusDays(i).plusHours(1)))
         .map(template::insert)
-        .collect(Collectors.toList());
+        .toList();
 
     Mono.when(inserts)
 
