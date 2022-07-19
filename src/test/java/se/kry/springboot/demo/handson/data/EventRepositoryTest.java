@@ -14,7 +14,6 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.Neo4jContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import se.kry.springboot.demo.handson.domain.EventDefaults;
 
@@ -64,19 +63,17 @@ class EventRepositoryTest {
   void find_all_events_by_pageable() {
 
     // Given
-    var saves = IntStream.range(0, 50)
-        .mapToObj(i -> Event.from("Event" + i,
-            EventDefaults.START_TIME.plusDays(i),
-            EventDefaults.START_TIME.plusDays(i).plusHours(1)))
-        .map(template::save)
-        .toList();
-
-    Mono.when(saves)
+    template.saveAll(IntStream.range(0, 50)
+            .mapToObj(i -> Event.from("Event" + i,
+                EventDefaults.START_TIME.plusDays(i),
+                EventDefaults.START_TIME.plusDays(i).plusHours(1)))
+            .toList())
 
         // When
-        .then(repository.findBy(Pageable.ofSize(20)).collectList())
+        .thenMany(repository.findBy(Pageable.ofSize(20)))
 
         // Then
+        .collectList()
         .as(StepVerifier::create)
         .assertNext(events ->
             assertThat(events).hasSize(20)
