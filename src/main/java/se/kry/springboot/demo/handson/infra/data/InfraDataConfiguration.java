@@ -10,7 +10,7 @@ import org.springframework.data.auditing.DateTimeProvider;
 public class InfraDataConfiguration {
 
   public interface BeanNames {
-    String DATE_TIME_PROVIDER_NAME = "dateTimeProvider"
+    String DATE_TIME_PROVIDER_NAME = "dateTimeProvider";
   }
 
   @Bean(name = BeanNames.DATE_TIME_PROVIDER_NAME)
