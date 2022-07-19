@@ -3,7 +3,6 @@ package se.kry.springboot.demo.handson.data;
 import static org.assertj.core.api.Assertions.assertThat;
 import static reactor.adapter.rxjava.RxJava2Adapter.monoToCompletable;
 
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +27,7 @@ class EventRepositoryTest {
 
     // Given
     monoToCompletable(
-    template.insert(
+        template.insert(
             new Event(EventDefaults.ID, EventDefaults.TITLE,
                 EventDefaults.START_TIME, EventDefaults.END_TIME,
                 EventDefaults.CREATED_DATE, EventDefaults.LAST_MODIFIED_DATE)))
@@ -56,11 +55,12 @@ class EventRepositoryTest {
             EventDefaults.START_TIME.plusDays(i),
             EventDefaults.START_TIME.plusDays(i).plusHours(1)))
         .map(template::insert)
-        .collect(Collectors.toList());
-    Mono.when(inserts).block();
+        .toList();
 
-    // When
-    repository.findBy(Pageable.ofSize(20))
+    monoToCompletable(Mono.when(inserts))
+
+        // When
+        .andThen(repository.findBy(Pageable.ofSize(20)))
         .toList()
 
         // Then
