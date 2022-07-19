@@ -4,15 +4,18 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.UUID;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.neo4j.core.ReactiveNeo4jTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.Neo4jContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import se.kry.springboot.demo.handson.domain.EventDefaults;
 import se.kry.springboot.demo.handson.domain.PersonDefaults;
@@ -46,6 +49,27 @@ class PersonRepositoryTest {
           assertThat(person.name()).isEqualTo(PersonDefaults.NAME);
         })
         .verifyComplete();
+  }
+
+  @Test
+  void find_all_people_by_pageable() {
+
+    // Given
+    var inserts = IntStream.range(0, 50)
+        .mapToObj(i -> Person.from(PersonDefaults.NAME + ' ' + i))
+        .map(template::save)
+        .toList();
+
+    Mono.when(inserts)
+
+        // When
+        .then(repository.findBy(Pageable.ofSize(20)).collectList())
+
+        // Then
+        .as(StepVerifier::create)
+        .assertNext(people ->
+            assertThat(people).hasSize(20)
+        ).verifyComplete();
   }
 
   @Test
