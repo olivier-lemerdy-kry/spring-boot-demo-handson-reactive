@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
-import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import se.kry.springboot.demo.handson.domain.EventDefaults;
 
@@ -47,19 +46,17 @@ class EventRepositoryTest {
   void find_all_events_by_pageable() {
 
     // Given
-    var inserts = IntStream.range(0, 50)
-        .mapToObj(i -> Event.from("Event" + i,
-            EventDefaults.START_TIME.plusDays(i),
-            EventDefaults.START_TIME.plusDays(i).plusHours(1)))
-        .map(template::insert)
-        .toList();
-
-    Mono.when(inserts)
+    template.insertAll(IntStream.range(0, 50)
+            .mapToObj(i -> Event.from("Event" + i,
+                EventDefaults.START_TIME.plusDays(i),
+                EventDefaults.START_TIME.plusDays(i).plusHours(1)))
+            .toList())
 
         // When
-        .then(repository.findBy(Pageable.ofSize(20)).collectList())
+        .thenMany(repository.findBy(Pageable.ofSize(20)))
 
         // Then
+        .collectList()
         .as(StepVerifier::create)
         .assertNext(events ->
             assertThat(events).hasSize(20)
