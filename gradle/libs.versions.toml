@@ -1,8 +1,8 @@
 [versions]
 java = "17"
-spring-boot = "2.7.1"
+spring-boot = "2.7.3"
 spring-cloud = "2021.0.3"
-spring-dependencies-management = "1.0.11.RELEASE"
+spring-dependencies-management = "1.0.13.RELEASE"
 testcontainers = "1.17.3"
 
 [libraries]
