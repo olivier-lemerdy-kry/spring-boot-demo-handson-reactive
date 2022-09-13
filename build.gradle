@@ -7,7 +7,6 @@ plugins {
 
 group = 'se.kry.springboot.demo.handson'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = libs.versions.java.get()
 
 configurations {
     compileOnly {
@@ -41,6 +40,12 @@ dependencies {
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:mysql'
     testImplementation 'org.testcontainers:r2dbc'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(libs.versions.java.get())
+    }
 }
 
 dependencyManagement {
