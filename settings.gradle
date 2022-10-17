@@ -7,7 +7,7 @@ dependencyResolutionManagement {
             version('spring-boot', '2.7.4')
             version('spring-cloud', '2021.0.4')
             version('spring-dependencies-management', '1.0.14.RELEASE')
-            version('testcontainers', '1.17.4')
+            version('testcontainers', '1.17.5')
 
             plugin('spring-boot', 'org.springframework.boot').versionRef('spring-boot')
             plugin('spring-dependencies-management', 'io.spring.dependency-management').versionRef('spring-dependencies-management')
