@@ -3,9 +3,19 @@ rootProject.name = 'spring-boot-demo-handson-reactive'
 dependencyResolutionManagement {
     versionCatalogs {
         libs {
+            version('java', '17')
             version('rxjava3', '3.1.4')
+            version('spring-boot', '2.7.5')
+            version('spring-cloud', '2021.0.5')
+            version('spring-dependencies-management', '1.0.15.RELEASE')
+            version('testcontainers', '1.17.5')
+
             library('rxjava3', 'io.reactivex.rxjava3', 'rxjava').versionRef('rxjava3')
+
             bundle('rxjava3', ['rxjava3'])
+
+            plugin('spring-boot', 'org.springframework.boot').versionRef('spring-boot')
+            plugin('spring-dependencies-management', 'io.spring.dependency-management').versionRef('spring-dependencies-management')
         }
     }
 }
