@@ -4,10 +4,10 @@ dependencyResolutionManagement {
     versionCatalogs {
         libs {
             version('java', '17')
-            version('spring-boot', '2.7.5')
+            version('spring-boot', '2.7.6')
             version('spring-cloud', '2021.0.5')
-            version('spring-dependencies-management', '1.0.15.RELEASE')
-            version('testcontainers', '1.17.5')
+            version('spring-dependencies-management', '1.1.0')
+            version('testcontainers', '1.17.6')
 
             plugin('spring-boot', 'org.springframework.boot').versionRef('spring-boot')
             plugin('spring-dependencies-management', 'io.spring.dependency-management').versionRef('spring-dependencies-management')
